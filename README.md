@@ -101,6 +101,7 @@ mkdir data
 Run snakemake by indicating the number of jobs or cores that are available to run the whole pipeline.  
 
 ```linux
+# Choose and/or edit the appropriate configuration file (ex. config_BR5.yaml, config_F230R.yaml)
 snakemake --jobs 24 --snakefile snakefile --configfile config.yaml
 ```
 
