@@ -102,7 +102,7 @@ Run snakemake by indicating the number of jobs or cores that are available to ru
 
 ```linux
 # Choose and/or edit the appropriate configuration file (ex. config_BR5.yaml, config_F230R.yaml)
-snakemake --jobs 24 --snakefile snakefile --configfile config.yaml
+snakemake --jobs 24 --snakefile snakefile --configfile config_BR5.yaml
 ```
 
 You can view read number and length (min, max, mean, median, mode) statistics for each sample at steps of the bioinformatic pipeline.  A simple report can be generated like so, modify to summarize reports for different bioinformatic steps (raw reads, paired reads, primer trimmed reads):
