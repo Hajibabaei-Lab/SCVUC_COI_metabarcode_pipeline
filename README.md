@@ -2,7 +2,7 @@
 
 This repository outlines how COI metabarcodes are processed by Teresita M. Porter. **SCVUC** refers to the programs, algorithms, and reference datasets used in this data flow: **S**EQPREP, **C**UTADAPT, **V**SEARCH, **U**NOISE, **C**OI classifier. 
 
-The pipeline begins with raw Illumina MiSeq fastq.gz files with paired-end reads. Reads are paired. Primers are trimmed. All the samples are pooled for a global analysis. Reads are dereplicated and denoised producing a reference set of exact sequence variants (ESVs). These ESVs are taxonomically assigned using the COI mtDNA reference set available from https://github.com/terrimporter/CO1Classifier and is used with the RDP Classifier (Wang et al., 2007) available from https://sourceforge.net/projects/rdp-classifier/ .
+The pipeline begins with raw Illumina MiSeq fastq.gz files with paired-end reads. Reads are paired. Primers are trimmed. All the samples are pooled for a global analysis. Reads are dereplicated and denoised producing a reference set of exact sequence variants (ESVs). The ESVs are translated into every possible open reading frame and the longest coding sequence is retained so long as they exceed a minimum length cutoff.  The cutoff is determined empirically to screen out the most obvious pseudogenenes that may have a shorter than expected length due to indels and frameshifts.  These ESVs are taxonomically assigned using the COI mtDNA reference set available from https://github.com/terrimporter/CO1Classifier and is used with the RDP Classifier (Wang et al., 2007) available from https://sourceforge.net/projects/rdp-classifier/ .
 
 This data flow has been developed using a conda environment and snakemake pipeline for improved reproducibility. It will be updated on a regular basis so check for the latest version at https://github.com/Hajibabaei-Lab/SCVUC_COI_metabarcode_pipeline/releases .
 
@@ -66,9 +66,25 @@ chmod 755 usearch11.0.667_i86linux32
 mv usearch11.0.667_i86linux32 usearch11
 ```
 
-3. The pipeline also requires the RDP classifier for the taxonomic assignment step.  Although the RDP classifier v2.2 is available through conda, a newer v2.12 is available form SourceForge at https://sourceforge.net/projects/rdp-classifier/ .  Download it and take note of where the classifier.jar file is as this needs to be added to config.yaml .
+3. The pipeline requires ORFfinder 0.4.3 available from the NCBI at ftp://ftp.ncbi.nlm.nih.gov/genomes/TOOLS/ORFfinder/linux-i64/ .  This program should be downloaded, made executable, and put in your path.
 
-The RDP classifier comes with the training sets to classify 16S, fungal ITS and fungal LSU rDNA sequences.  To classify 18S sequences, obtain the training set from GitHub 
+```linux
+# download
+wget ftp://ftp.ncbi.nlm.nih.gov/genomes/TOOLS/ORFfinder/linux-i64/ORFfinder.gz
+
+# decompress
+gunzip ORFfinder.gz
+
+# make executable
+chmod 755 ORFfinder
+
+# put in your PATH (ex. ~/bin)
+mv ORFfinder ~/bin/.
+```
+
+4. The pipeline also requires the RDP classifier for the taxonomic assignment step.  Although the RDP classifier v2.2 is available through conda, a newer v2.12 is available form SourceForge at https://sourceforge.net/projects/rdp-classifier/ .  Download it and take note of where the classifier.jar file is as this needs to be added to config.yaml .
+
+The RDP classifier comes with the training sets to classify 16S, fungal ITS and fungal LSU rDNA sequences.  To classify COI mtDNA sequences, obtain the COI classifier v4 reference set from GitHub 
 https://github.com/terrimporter/CO1Classifier .  Take note of where the rRNAclassifier.properties file is as this needs to be added to the config.yaml .
 
 ```linux
@@ -121,52 +137,59 @@ conda deactivate
 
 ## Implementation notes
 
-Shell scripts are written for Bash.  Other scripts are written in Perl and may require additional libraries that are indicated at the top of the script when needed and these can be obtained from CPAN.  I have provided links throughout the README on where to obtain additional data processing tools such as GNU parallel (Tang, 2011) and Perl-rename (Gergely, 2018).
+### Chaning the minimum coding sequence cutoff value
 
-To keep the dataflow here as clear as possible, I have ommitted file renaming and clean-up steps.  I also use shortcuts to link to scripts as described above in numerous places.  This is only helpful if you will be running this pipeline often.  I describe, in general, how I like to do this here:
+The minimum coding sequence cutoff value chosen dependson the amplicon being analyzed and is chosen empirically.  It is a good idea to test a suite of cutoff values and select a cutoff based on the results.  
+
+1. You can easily change this value in the config.yaml file.
+
+```linux
+min_config_length: 309
+```
+
+2. Edit the snakefile to stop after generating the cds.fasta file by removing the hash (#) symbol before cds_out and adding a hash symbol to the rdp_csv2 line:
+
+```linux
+rule all:
+    input:
+        ...
+		# 5_Get CDS, filter CDS, keep longest
+		cds_out
+        ...
+        # 8_Taxonomic assignment (edit ESV id's to include amplicon name) [Final output file]
+#		rdp_csv2
+```
+
+3. Run the edited snakefile:
+
+```linux
+snakemake --jobs 24 --snakefile snakefile --configfile config.yaml
+```
+
+4. Rename the the default outfile:
+
+```linux
+mv BR5/cds.fasta BR5/cds.fasta.309
+```
+
+Repeat steps 1-4 with new cutoff values.  Compare the number of retained coding sequences in the cds.fasta files (ex. plot cutoff versus number of cds and choose a value before a steep dropoff in the number of retained cds).  Alternatively, use the average/mode length of the primer trimmed sequences as the cutoff value, plot a histogram of the resulting cds lengths, choose a cutoff based on the results.
 
 ### Batch renaming of files
 
-Note that I am using Perl-rename (Gergely, 2018) that is available at https://github.com/subogero/rename not linux rename.  I prefer the Perl implementation so that you can easily use regular expressions.  I first run the command with the -n flag so you can review the changes without making any actual changes.  If you're happy with the results, re-run without the -n flag.
+Sometimes it necessary to rename raw data files in batches.  I use Perl-rename (Gergely, 2018) that is available at https://github.com/subogero/rename not linux rename.  I prefer the Perl implementation so that you can easily use regular expressions.  I first run the command with the -n flag so you can review the changes without making any actual changes.  If you're happy with the results, re-run without the -n flag.
 
 ```linux
 rename -n 's/PATTERN/NEW PATTERN/g' *.gz
 ```
 
-### File clean-up
-
-At every step, I place outfiles into their own directory, then cd into that directory.  I also delete any extraneous outfiles that may have been generated but are not used in subsequent steps to save disk space.
-
 ### Symbolic links
 
-Instead of continually traversing nested directories to get to files, I create symbolic links to target directories in a top level directory.  Symbolic links can also be placed in your ~/bin directory that point to scripts that reside elsewhere on your system.  So long as those scripts are executable (e.x. chmod 755 script.plx) then the shortcut will also be executable without having to type out the complete path or copy and pasting the script into the current directory.
+Symbolic links are like shortcuts or aliases that can also be placed in your ~/bin directory that point to files or programs that reside elsewhere on your system.  So long as those scripts are executable (e.x. chmod 755 script.plx) then the shortcut will also be executable without having to type out the complete path or copy and pasting the script into the current directory.
 
 ```linux
 ln -s /path/to/target/directory shortcutName
+ln -s /path/to/target/directory fileName
 ln -s /path/to/script/script.sh commandName
-```
-
-### Split large files into smaller ones
-
-It is easy to use vi to do a simple search and replace such as replacing all dashes with underscores.  When the file size is really large though, you may need to split it up into a few smaller sized files, run your search and replace in vi, then concatenate the results back together.
-
-```linux
-
-# Split a large file into 2 million line chunks
-zcat cat.fasta.gz | split -l 2000000
-
-# Use vi to replace all dashes with underscores
-ls | grep x | parallel -j 10 "vi -c "%s/-/_/g" -c "wq" {}"
-
-# Concatenate the results back into a single file
-ls | grep x | parallel -j 1 "cat {} >> cat.fasta2"
-
-# Compress the file and use it for vsearch dereplication
-gzip cat.fasta2
-
-# Remove the old partial files that are no longer needed
-rm x*
-
 ```
 
 ## References
@@ -184,4 +207,4 @@ Wang, Q., Garrity, G. M., Tiedje, J. M., & Cole, J. R. (2007). Naive Bayesian Cl
 
 I would like to acknowedge funding from the Canadian government through the Genomics Research and Development Initiative (GRDI) EcoBiomics project.
 
-Last updated: Sept. 5, 2019
+Last updated: Sept. 6, 2019
