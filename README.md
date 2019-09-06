@@ -2,7 +2,7 @@
 
 This repository outlines how COI metabarcodes are processed by Teresita M. Porter. **SCVUC** refers to the programs, algorithms, and reference datasets used in this data flow: **S**EQPREP, **C**UTADAPT, **V**SEARCH, **U**NOISE, **C**OI classifier. 
 
-The pipeline begins with raw Illumina MiSeq fastq.gz files with paired-end reads. Reads are paired. Primers are trimmed. All the samples are pooled for a global analysis. Reads are dereplicated and denoised producing a reference set of exact sequence variants (ESVs). ESVs are filtered again by retaining the longest coding sequence so long as they exceed a minimum length cutoff.  These coding sequences are taxonomically assigned using the COI mtDNA reference set available from https://github.com/terrimporter/CO1Classifier and is used with the RDP Classifier (Wang et al., 2007) available from https://sourceforge.net/projects/rdp-classifier/ .
+The pipeline begins with raw Illumina MiSeq fastq.gz files with paired-end reads. Reads are paired. Primers are trimmed. All the samples are pooled for a global analysis. Reads are dereplicated and denoised producing a reference set of exact sequence variants (ESVs). ESVs are filtered again by retaining only the longest coding sequences (CDS) and removing outliers (CDS unusually sort or long).  These CDS are taxonomically assigned using the COI mtDNA reference set available from https://github.com/terrimporter/CO1Classifier and is used with the RDP Classifier (Wang et al., 2007) available from https://sourceforge.net/projects/rdp-classifier/ .
 
 This data flow has been developed using a conda environment and snakemake pipeline for improved reproducibility. It will be updated on a regular basis so check for the latest version at https://github.com/Hajibabaei-Lab/SCVUC_COI_metabarcode_pipeline/releases .
 
@@ -38,7 +38,7 @@ Reads are dereplicated (only unique sequences are retained) using VSEARCH v2.13.
 
 Denoised exact sequence variants (ESVs) are generated using USEARCH v11.0.667 with the unoise3 algorithm (Edgar, 2016).  This step removes any PhiX contamination, putative chimeric sequences, sequences with predicted errors, and rare sequences.  This step produces zero-radius OTUs (Zotus) also referred to commonly as amplicon sequence variants (ASVs), ESVs, or 100% operational taxonomic unit (OTU) clusters.  Here, we define rare sequences to be sequence clusters containing only one or two reads (singletons and doubletons) and these are removed as 'noise'.
 
-The ESVs are translated into every possible open reading frame and the longest coding sequence is retained so long as they exceed a minimum length cutoff.  The cutoff is determined empirically to screen out the most obvious pseudogenenes that may have a shorter than expected length due to indels and frameshifts (see [Implementation notes](#implementation-notes) below).
+The ESVs are translated into every possible open reading frame.  The longest coding sequences are retained for each ESV, and outliers are removed.  Outliers are identified as coding sequences with lengths +/- 1.5\*IQR (inter quartile range).  This method should help to screen out the most obvious pseudogenenes that may have a shorter than expected length due to deletions and frameshifts, or longer than expected length due to a loss of conservation of function.
 
 An ESV table that tracks read number for each coding sequence in each sample is generated with VSEARCH.
 
@@ -167,43 +167,6 @@ vsearch --version
 Version numbers are also tracked in the snakefile.
 
 Note that commercial software (ex. USEARCH) and programs not available from conda (ex. ORFfinder) need to be installed on your system and executable in your PATH (see [Standard pipeline](#standard-pipeline) "Prepare your environment to run the pipeline").
-
-### Changing the minimum coding sequence cutoff value
-
-The minimum coding sequence cutoff value chosen dependson the amplicon being analyzed and is chosen empirically.  It is a good idea to test a suite of cutoff values and select a cutoff based on the results.  
-
-1. You can easily change this value in the config.yaml file.
-
-```linux
-min_config_length: 309
-```
-
-2. Edit the snakefile to stop after generating the cds.fasta file by removing the hash (#) symbol before cds_out and adding a hash symbol to the rdp_csv2 line:
-
-```linux
-rule all:
-    input:
-        ...
-		# 5_Get CDS, filter CDS, keep longest
-		cds_out
-        ...
-        # 8_Taxonomic assignment (edit ESV id's to include amplicon name) [Final output file]
-#		rdp_csv2
-```
-
-3. Run the edited snakefile:
-
-```linux
-snakemake --jobs 24 --snakefile snakefile --configfile config.yaml
-```
-
-4. Rename the the default outfile:
-
-```linux
-mv BR5/cds.fasta BR5/cds.fasta.309
-```
-
-Repeat steps 1-4 with new cutoff values.  Compare the number of retained coding sequences in the cds.fasta files (ex. plot cutoff versus number of cds and choose a value before a steep dropoff in the number of retained cds).  Alternatively, use the average/mode length of the primer trimmed sequences as the cutoff value, plot a histogram of the resulting cds lengths, choose a cutoff based on the results.
 
 ### Batch renaming of files
 
