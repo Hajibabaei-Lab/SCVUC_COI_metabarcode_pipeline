@@ -95,16 +95,16 @@ RDP:
     t: "/path/to/CO1Classifier/v4/NCBI_BOLD_merged/mydata/mydata_trained/rRNAClassifier.properties"
 ```
 
-4. In most cases, your raw paired-end Illumina reads can go into a directory called 'data' which should be placed in the same directory as the other files that come with this pipeline.
+5. In most cases, your raw paired-end Illumina reads can go into a directory called 'data' which should be placed in the same directory as the other files that come with this pipeline.
 
 ```linux
 # Create a new directory to hold your raw data
 mkdir data
 ```
 
-5. Please go through the config.yaml file and edit directory names, filename patterns, etc. as necessary to work with your filenames.
+6. Please go through the config.yaml file and edit directory names, filename patterns, etc. as necessary to work with your filenames.
 
-6. Be sure to edit the first line of each Perl script (shebang) in the perl_scripts directory to point to where Perl is installed.
+7. Be sure to edit the first line of each Perl script (shebang) in the perl_scripts directory to point to where Perl is installed.
 
 ```linux
 # The usual shebang if you already have Perl installed
