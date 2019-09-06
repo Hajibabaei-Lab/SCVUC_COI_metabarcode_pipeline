@@ -66,7 +66,10 @@ usearch_log=dir+"/usearch.log"
 
 # 6_Get CDS
 orf_out=dir+"/cds.fasta.tmp"
-cds_out=dir+"/cds.fasta"
+cds_out=dir+"/cds.fasta.tmp2"
+range=dir+"/limits.csv"
+plot=dir+"/cds.pdf"
+cds_out2=dir+"/cds.fasta"
 
 # 7_Create ESV table
 vsearch_out2=dir+"/ESV.table"
@@ -115,6 +118,11 @@ rule all:
 #		orf_out
 		# 5_Get CDS, filter CDS, keep longest
 #		cds_out
+		# 5_Get CDS, calculate range of CDS lengths
+#		plot,
+#		range,
+		# 5_Get CDS, filter CDS, use range cutoffs
+#		cds_out2
 		# 6_Denoise reads
 #		usearch_out
 		# 7_Create ESV table
@@ -319,7 +327,7 @@ rule get_orfs:
 	input:
 		usearch_out
 	output:
-		temp(orf_out)
+		orf_out
 	shell:
 		"ORFfinder -in {input} -g {config[ORFFINDER][g]} -s {config[ORFFINDER][s]} -out {output} -outfmt {config[ORFFINDER][outfmt]}"
 
@@ -329,13 +337,35 @@ rule get_orfs:
 rule filter_cds:
 	input:
 		orf_out
-	params:
-		config["min_cds_length"]
 	output:
 		cds_out
 	shell:
-		"perl perl_scripts/get_longest_orf_nt.plx {input} {params} > {output}"
-	
+		"perl perl_scripts/get_longest_orf_nt2.plx {input} > {output}"
+
+#######################################################################
+# Calculate outliers
+
+rule find_outliers:
+	input:
+		cds_out
+	output:
+		out1=plot,
+		out2=range
+	shell:
+		"Rscript R_scripts/length_hist.R {input} {output.out1} {output.out2}"
+
+#######################################################################
+# Get CDS, only keep CDS with lengths within 1.5*IQR
+
+rule filter_cds2:
+	input:
+		orfs=orf_out,
+		range=range
+	output:
+		cds_out2
+	shell:
+		"perl perl_scripts/get_longest_orf_nt3.plx {input.orfs} {input.range} > {output}"
+
 #######################################################################
 # Create ESV table
 
@@ -343,7 +373,7 @@ rule create_ESV_table:
 	version: "2.13.16"
 	input:
 		usearch_global=gzip_out,
-		db=cds_out
+		db=cds_out2
 	output:
 		vsearch_out2
 	threads: config["VSEARCH"]["t"]
@@ -361,7 +391,7 @@ rule create_ESV_table:
 rule taxonomic_assignment:
 	version: "2.12"
 	input:
-		cds_out
+		cds_out2
 	output:
 		temp(rdp_out)
 	shell:

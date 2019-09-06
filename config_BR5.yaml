@@ -10,13 +10,14 @@
 # Indicate number of cores available to run pipeline, snakefile, and configuration file at the command line:
 # snakemake --jobs 24 --snakefile snakefile --configfile config.yaml
 
-i############################################################################
+############################################################################
 # Identify raw read files
 ############################################################################
 
 # This directory contains raw reads (all of them or from just one run)
 # Only use compressed fastq files with this pipeline, ex. fastq.gz
 # For the standard pipeline, call the directory "data"
+# For the alternate pipeline, call the rectory "run1_data", "run2_data", etc.
 raw: "data"
 
 # Indicate 'sample' and 'read' wildcards in raw filenames:
@@ -104,10 +105,6 @@ ORFFINDER:
 # 1 = CDS fasta
     outfmt: 1
 
-# Get longest CDS, use a minimum length cutoff to screen out obvious pseudogenes
-
-min_cds_length: 309
-
 ############################################################################
 # Taxonomic assignment
 ############################################################################
@@ -117,8 +114,8 @@ min_cds_length: 309
 # COI Classifier v4 based on sequences mined from GenBank and BOLD but compatible with the RDP classifier is available from GitHub https://github.com/Hajibabaei-Lab/SCVUC_COI_metabarcode_pipeline
 
 RDP:
-    jar: "/path/to/rdp_classifier_2.12/dist/classifier.jar"
-    t: "/path/to/CO1Classifier/v4/NCBI_BOLD_merged/mydata/mydata_trained/rRNAClassifier.properties"
+    jar: "/home/terri/rdp_classifier_2.12/dist/classifier.jar"
+    t: "/home/terri/CO1Classifier/v4/NCBI_BOLD_merged/mydata/mydata_trained/rRNAClassifier.properties"
 
 ############################################################################
 # Reformat CSV
