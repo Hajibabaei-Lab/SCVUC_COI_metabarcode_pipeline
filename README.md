@@ -139,6 +139,35 @@ conda deactivate
 
 ## Implementation notes
 
+### Check program versions
+
+Ensure that the correct programs from the environment are being used.
+
+```linux
+# create conda environment from file
+conda env create -f environment.yml
+
+# activate the environment
+conda activate myenv
+
+# list all programs available in the environment at once
+conda list
+
+# or, inidivdually check that key programs in the conda environment are being used
+which SeqPrep
+which cutadapt
+which vsearch
+which perl
+
+# then, check their version numbers one at a time
+cutadapt --version
+vsearch --version
+```
+
+Version numbers are also tracked in the snakefile.
+
+Note that commercial software (ex. USEARCH) and programs not available from conda (ex. ORFfinder) need to be installed on your system and executable in your PATH (see [Standard pipeline](#standard-pipeline) "Prepare your environment to run the pipeline").
+
 ### Changing the minimum coding sequence cutoff value
 
 The minimum coding sequence cutoff value chosen dependson the amplicon being analyzed and is chosen empirically.  It is a good idea to test a suite of cutoff values and select a cutoff based on the results.  
