@@ -2,7 +2,7 @@
 
 This repository outlines how COI metabarcodes are processed by Teresita M. Porter. **SCVUC** refers to the programs, algorithms, and reference datasets used in this data flow: **S**EQPREP, **C**UTADAPT, **V**SEARCH, **U**NOISE, **C**OI classifier. 
 
-The pipeline begins with raw Illumina MiSeq fastq.gz files with paired-end reads. Reads are paired. Primers are trimmed. All the samples are pooled for a global analysis. Reads are dereplicated and denoised producing a reference set of exact sequence variants (ESVs). The ESVs are translated into every possible open reading frame and the longest coding sequence is retained so long as they exceed a minimum length cutoff.  The cutoff is determined empirically to screen out the most obvious pseudogenenes that may have a shorter than expected length due to indels and frameshifts.  These ESVs are taxonomically assigned using the COI mtDNA reference set available from https://github.com/terrimporter/CO1Classifier and is used with the RDP Classifier (Wang et al., 2007) available from https://sourceforge.net/projects/rdp-classifier/ .
+The pipeline begins with raw Illumina MiSeq fastq.gz files with paired-end reads. Reads are paired. Primers are trimmed. All the samples are pooled for a global analysis. Reads are dereplicated and denoised producing a reference set of exact sequence variants (ESVs). ESVs are filtered again by retaining the longest coding sequence so long as they exceed a minimum length cutoff.  These coding sequences are taxonomically assigned using the COI mtDNA reference set available from https://github.com/terrimporter/CO1Classifier and is used with the RDP Classifier (Wang et al., 2007) available from https://sourceforge.net/projects/rdp-classifier/ .
 
 This data flow has been developed using a conda environment and snakemake pipeline for improved reproducibility. It will be updated on a regular basis so check for the latest version at https://github.com/Hajibabaei-Lab/SCVUC_COI_metabarcode_pipeline/releases .
 
@@ -38,7 +38,9 @@ Reads are dereplicated (only unique sequences are retained) using VSEARCH v2.13.
 
 Denoised exact sequence variants (ESVs) are generated using USEARCH v11.0.667 with the unoise3 algorithm (Edgar, 2016).  This step removes any PhiX contamination, putative chimeric sequences, sequences with predicted errors, and rare sequences.  This step produces zero-radius OTUs (Zotus) also referred to commonly as amplicon sequence variants (ASVs), ESVs, or 100% operational taxonomic unit (OTU) clusters.  Here, we define rare sequences to be sequence clusters containing only one or two reads (singletons and doubletons) and these are removed as 'noise'.
 
-An ESV table that tracks read number for each ESV in each sample is generated with VSEARCH.
+The ESVs are translated into every possible open reading frame and the longest coding sequence is retained so long as they exceed a minimum length cutoff.  The cutoff is determined empirically to screen out the most obvious pseudogenenes that may have a shorter than expected length due to indels and frameshifts (see [Implementation notes](#implementation-notes) below).
+
+An ESV table that tracks read number for each coding sequence in each sample is generated with VSEARCH.
 
 COI mtDNA taxonomic assignments are made using the Ribosomal Database classifier v2.12 (RDP classifier) available from https://sourceforge.net/projects/rdp-classifier/ (Wang et al., 2007) using the COI classifier v3.2 reference dataset (Porter and Hajibabaei, 2018 Sci Rep).
 
@@ -137,7 +139,7 @@ conda deactivate
 
 ## Implementation notes
 
-### Chaning the minimum coding sequence cutoff value
+### Changing the minimum coding sequence cutoff value
 
 The minimum coding sequence cutoff value chosen dependson the amplicon being analyzed and is chosen empirically.  It is a good idea to test a suite of cutoff values and select a cutoff based on the results.  
 
