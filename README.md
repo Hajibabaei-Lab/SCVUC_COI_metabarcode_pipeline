@@ -38,7 +38,17 @@ Reads are dereplicated (only unique sequences are retained) using VSEARCH v2.13.
 
 Denoised exact sequence variants (ESVs) are generated using USEARCH v11.0.667 with the unoise3 algorithm (Edgar, 2016).  This step removes any PhiX contamination, putative chimeric sequences, sequences with predicted errors, and rare sequences.  This step produces zero-radius OTUs (Zotus) also referred to commonly as amplicon sequence variants (ASVs), ESVs, or 100% operational taxonomic unit (OTU) clusters.  Here, we define rare sequences to be sequence clusters containing only one or two reads (singletons and doubletons) and these are removed as 'noise'.
 
-The ESVs are translated into every possible open reading frame.  The longest coding sequences are retained for each ESV, and outliers are removed.  Outliers are identified as coding sequences with lengths +/- 1.5\*IQR (inter quartile range).  This method should help to screen out the most obvious pseudogenenes that may have a shorter than expected length due to deletions and frameshifts, or longer than expected length due to a loss of conservation of function.
+The ESVs are translated into every possible open reading frame.  The longest coding sequences are retained for each ESV, and outliers are removed.  Outliers are identified as coding sequences with lengths +/- 1.5\*IQR (inter quartile range).  This method should help to screen out the most obvious pseudogenes that may have a shorter than expected length due to sequence errors, deletions, and frameshifts, or longer than expected length due to insertions.  There is no guarantee that genuine coding sequences are not erroneously removed during this step.  If your dataset contains taxa with coding sequences known to be unusually shorter or longer than usual, then this filtering step should be ommitted form the pipeline and the ESV table and taxonomic assignments should be based on the cat.denoised file directly, edit the the snakemake file as follows:
+
+```linux
+rule create_ESV_table:
+    input:
+        db=usearch_out
+...
+rule taxonomic_assignment:
+    input:
+        usearch_out
+```
 
 An ESV table that tracks read number for each coding sequence in each sample is generated with VSEARCH.
 
