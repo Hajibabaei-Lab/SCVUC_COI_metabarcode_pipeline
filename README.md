@@ -52,7 +52,7 @@ rule taxonomic_assignment:
 
 An ESV table that tracks read number for each coding sequence in each sample is generated with VSEARCH.
 
-COI mtDNA taxonomic assignments are made using the Ribosomal Database classifier v2.12 (RDP classifier) available from https://sourceforge.net/projects/rdp-classifier/ (Wang et al., 2007) using the COI classifier v3.2 reference dataset (Porter and Hajibabaei, 2018 Sci Rep).
+COI mtDNA taxonomic assignments are made using the Ribosomal Database classifier v2.12 (RDP classifier) available from https://sourceforge.net/projects/rdp-classifier/ (Wang et al., 2007) using the COI classifier v4 reference dataset (Porter and Hajibabaei, 2018 Sci Rep).
 
 The final output is reformatted to add read numbers for each sample and column headers to improve readability.
 
