@@ -33,28 +33,34 @@ raw_sample_forward_wildcard=config["raw_sample_forward_wildcard"]
 dir=config["dir"]
 stats_out="{sample}.stats"
 raw1_stats_out=dir+"/stats/R1/"+stats_out
-raw2_stats_out=dir+"/stats/R2/"+stats_out
+cat_raw1_stats_out=dir+"/stats/R1.stats"
 
 raw_sample_reverse_wildcard=config["raw_sample_reverse_wildcard"]
+raw2_stats_out=dir+"/stats/R2/"+stats_out
+cat_raw2_stats_out=dir+"/stats/R2.stats"
+
 #dir=config["dir"]
 fastq_gz="{sample}.fastq.gz"
 seqprep_out=dir+"/paired/"+fastq_gz
 paired_stats_out=dir+"/stats/paired/"+stats_out
+cat_paired_stats_out=dir+"/stats/paired.stats"
 
 # 2_Trim reads
 cutadapt_f_out=dir+"/Fprimer_trimmed/"+fastq_gz
 Ftrimmed_stats_out=dir+"/stats/Ftrimmed/"+stats_out
+cat_Ftrimmed_stats_out=dir+"/stats/Ftrimmed.stats"
 
 fasta_gz="{sample}.fasta.gz"
 cutadapt_r_out=dir+"/Rprimer_trimmed/"+fasta_gz
 Rtrimmed_stats_out=dir+"/stats/Rtrimmed/"+stats_out
+cat_Rtrimmed_stats_out=dir+"/stats/Rtrimmed.stats"
 
 # 3_Concatenate samples for global analysis
 fasta="{sample}.fasta"
 concatenate_pattern=dir+"/"+fasta
-output=dir+"/cat.fasta"
-output2=dir+"/cat.fasta2"
-gzip_out=dir+"/cat.fasta2.gz"
+output=dir+"/cat.fasta.tmp"
+output2=dir+"/cat.fasta"
+gzip_out=dir+"/cat.fasta.gz"
 
 # 4_Dereplicate reads
 vsearch_out=dir+"/cat.uniques"
@@ -90,20 +96,25 @@ rule all:
 	input:
 		# Rule testing [In order of execution]:
 		# Calculate raw stats
-		expand(raw1_stats_out, sample=SAMPLES_UNIQUE),
-		expand(raw2_stats_out, sample=SAMPLES_UNIQUE),
+#		expand(raw1_stats_out, sample=SAMPLES_UNIQUE),
+#		expand(raw2_stats_out, sample=SAMPLES_UNIQUE),
+		cat_raw1_stats_out,
+		cat_raw2_stats_out,
 		# 1_Pair reads
 #		expand(seqprep_out, sample=SAMPLES)
 		# Calculate paired stats
 		expand(paired_stats_out, sample=SAMPLES_UNIQUE),
+		cat_paired_stats_out,
 		# 2_Trim reads (forward)
 #		expand(cutadapt_f_out, sample=SAMPLES)
 		# Calculate forward trimmed stats
 		expand(Ftrimmed_stats_out, sample=SAMPLES_UNIQUE),
+		cat_Ftrimmed_stats_out,
 		# 2_Trim reads (reverse)
 #		expand(cutadapt_r_out, sample=SAMPLES)
 		# Calculate reverse trimmed stats
 		expand(Rtrimmed_stats_out, sample=SAMPLES_UNIQUE),
+		cat_Rtrimmed_stats_out,
 		# 2_Trim reads (edit fasta header)
 #		expand(concatenate_pattern, sample=SAMPLES)
 		# 3_Concatenate samples for global analysis
@@ -148,6 +159,17 @@ rule raw1_stats:
 		"perl perl_scripts/fastq_gz_stats.plx {input} >> {output}"
 
 #######################################################################
+# Concatenate R1 reads
+
+rule cat_raw1_stats:
+	input:
+		expand(raw1_stats_out, sample=SAMPLES_UNIQUE)
+	output:
+		cat_raw1_stats_out
+	shell:
+		"cat {input} >> {output}"
+
+#######################################################################
 # Count raw reverse reads
 # For each file calculates number of reads (total), length of reads (min, max, mean, median, mode)
 # To summarize output, go to directory and enter 'cat *.stats' > R2.stats'
@@ -160,6 +182,16 @@ rule raw2_stats:
 	shell:
 		"perl perl_scripts/fastq_gz_stats.plx {input} >> {output}"
 
+#######################################################################
+# Concatenate R2 reads
+
+rule cat_raw2_stats:
+	input:
+		expand(raw2_stats_out, sample=SAMPLES_UNIQUE)
+	output:
+		cat_raw2_stats_out
+	shell:
+		"cat {input} >> {output}"
 
 #######################################################################
 # Pair forward and reverse reads with SeqPrep
@@ -189,6 +221,16 @@ rule paired_stats:
 	shell:
 		"perl perl_scripts/fastq_gz_stats.plx {input} >> {output}"
 
+#######################################################################
+# Concatenate paired reads
+
+rule cat_paired_stats:
+	input:
+		expand(paired_stats_out, sample=SAMPLES_UNIQUE)
+	output:
+		cat_paired_stats_out
+	shell:
+		"cat {input} >> {output}"
 
 #######################################################################
 # Trim forward primer with CUTADAPT
@@ -216,6 +258,17 @@ rule Ftrimmed_stats:
 		"perl perl_scripts/fastq_gz_stats.plx {input} >> {output}"
 
 #######################################################################
+# Concatenate Ftrimmed reads
+
+rule cat_Ftrimmed_stats:
+	input:
+		expand(Ftrimmed_stats_out, sample=SAMPLES_UNIQUE)
+	output:
+		cat_Ftrimmed_stats_out
+	shell:
+		"cat {input} >> {output}"
+
+#######################################################################
 # Trim reverse primer with CUTADAPT
 
 rule trim_reverse_primer:
@@ -239,6 +292,17 @@ rule Rtrimmed_stats:
 		Rtrimmed_stats_out
 	shell:
 		"perl perl_scripts/fasta_gz_stats.plx {input} >> {output}"
+
+#######################################################################
+# Concatenate Rtrimmed reads
+
+rule cat_Rtrimmed_stats:
+	input:
+		expand(Rtrimmed_stats_out, sample=SAMPLES_UNIQUE)
+	output:
+		cat_Rtrimmed_stats_out
+	shell:
+		"cat {input} >> {output}"
 
 #######################################################################
 # Edit fasta header with Perl script
