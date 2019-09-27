@@ -38,7 +38,7 @@ Reads are dereplicated (only unique sequences are retained) using VSEARCH v2.13.
 
 Denoised exact sequence variants (ESVs) are generated using USEARCH v11.0.667 with the unoise3 algorithm (Edgar, 2016).  This step removes any PhiX contamination, putative chimeric sequences, sequences with predicted errors, and rare sequences.  This step produces zero-radius OTUs (Zotus) also referred to commonly as amplicon sequence variants (ASVs), ESVs, or 100% operational taxonomic unit (OTU) clusters.  Here, we define rare sequences to be sequence clusters containing only one or two reads (singletons and doubletons) and these are removed as 'noise'.
 
-The ESVs are translated into every possible open reading frame.  The longest coding sequences are retained for each ESV, and outliers are removed.  Outliers are identified as coding sequences with lengths +/- 1.5\*IQR (inter quartile range).  This method should help to screen out the most obvious pseudogenes that may have a shorter than expected length due to sequence errors, deletions, and frameshifts, or longer than expected length due to insertions.  There is no guarantee that genuine coding sequences are not erroneously removed during this step.  If your dataset contains taxa with coding sequences known to be unusually shorter or longer than usual, then this filtering step should be ommitted form the pipeline and the ESV table and taxonomic assignments should be based on the cat.denoised file directly, edit the the snakemake file as follows:
+The ESVs are translated into every possible open reading frame.  The longest coding sequences are retained for each ESV, and outliers are removed.  Outliers are identified as coding sequences with lengths +/- 1.5\*IQR (inter quartile range).  This method should help to screen out the most obvious pseudogenes that may have a shorter than expected length due to sequence errors, deletions, and frameshifts, or longer than expected length due to insertions.  There is no guarantee that genuine coding sequences are not erroneously removed during this step.  If your dataset contains taxa with coding sequences known to be unusually shorter or longer than usual, then this filtering step should be ommitted from the pipeline and the ESV table and taxonomic assignments should be based on the cat.denoised file directly, edit the snakemake file as follows:
 
 ```linux
 rule create_ESV_table:
@@ -52,7 +52,7 @@ rule taxonomic_assignment:
 
 An ESV table that tracks read number for each coding sequence in each sample is generated with VSEARCH.
 
-COI mtDNA taxonomic assignments are made using the Ribosomal Database classifier v2.12 (RDP classifier) available from https://sourceforge.net/projects/rdp-classifier/ (Wang et al., 2007) using the COI classifier v3.2 reference dataset (Porter and Hajibabaei, 2018 Sci Rep).
+COI mtDNA taxonomic assignments are made using the Ribosomal Database classifier v2.12 (RDP classifier) available from https://sourceforge.net/projects/rdp-classifier/ (Wang et al., 2007) using the COI classifier v4 reference dataset available from https://github.com/terrimporter/CO1Classifier (Porter and Hajibabaei, 2018 Sci Rep).
 
 The final output is reformatted to add read numbers for each sample and column headers to improve readability.
 
@@ -211,4 +211,4 @@ Wang, Q., Garrity, G. M., Tiedje, J. M., & Cole, J. R. (2007). Naive Bayesian Cl
 
 I would like to acknowedge funding from the Canadian government through the Genomics Research and Development Initiative (GRDI) EcoBiomics project.
 
-Last updated: Sept. 6, 2019
+Last updated: Sept. 27, 2019
