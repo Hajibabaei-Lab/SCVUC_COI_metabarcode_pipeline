@@ -161,7 +161,7 @@ conda env create -f environment.yml
 conda activate myenv
 
 # list all programs available in the environment at once
-conda list
+conda list > programs.list
 
 # or, inidivdually check that key programs in the conda environment are being used
 which SeqPrep
