@@ -1,9 +1,8 @@
 #!/path/to/miniconda3/envs/myenv/bin/perl
-# Sept 5., 2019 by Teresita M. Porter
-# Script to grab longest CDS from ORFfinder nucleotide output (option 1)
-# only keep CDS with lengths within 1.5*IQR
-# print to STDOUT here, in snakemake, redirect to an outfile
-# USAGE perl get_longest_orf.plx cds.fasta.tmp limits.csv
+# Oct. 25, 2019 by Teresita M. Porter
+# Script to grab longest CDS from ORFfinder nucleotide output
+# Keep CDS with lengths within 25th percentile + 1.5*IQR to 75th percentile + 1.5*IQR
+# USAGE perl get_longest_orf.plx cds.fasta.tmp limits.txt cds.pdf cds.fasta.tmp2 cds.fasta
 
 use strict;
 use warnings;
@@ -16,9 +15,16 @@ my $otu;
 my $length;
 my $flag=0;
 my $seq;
+my $seq1;
+my $seq2;
 my $longest;
 my $lower;
 my $upper;
+
+my $limits = $ARGV[1]; # matches range in snakefile
+my $plot = $ARGV[2]; # matches plot in snakefile
+my $cds_out = $ARGV[3]; # matches cds_out in snakefile
+my $cds_out2 = $ARGV[4]; # matches cds_out2 in snakefile
 
 # declare array
 my @in;
@@ -77,8 +83,33 @@ $seq{$otu}{$orf} = $seq;
 # get unique otu keys
 @otus = keys %length;
 
+# open outfile for longest nt ORFs (not filtered, contains outliers)
+open (OUT, ">>", $cds_out) || die "Error cannot open cds_out: $!\n";
+
+# print longest ORFs before and after removing outliers
+while ($otus[$i]) {
+	$otu = $otus[$i];
+
+	@longest =  sort { $length{$otu}{$a} <=> $length{$otu}{$b} } keys %{$length{$otu}};
+	$longest = $longest[-1]; #inner key to longest is at bottom of array
+	$length = $length{$otu}{$longest};
+	$seq1 = $seq{$otu}{$longest};
+	print OUT ">$otu\n$seq1\n";
+
+	$i++;
+	next;
+}
+$i=0;
+
+close OUT;
+
+# run R script to plot hisogram and get cutoff lengths
+# paths relative to original snakefile
+system("Rscript R_scripts/length_hist.R $cds_out $plot $limits");
+wait;
+
 # get 1.5*IQR
-open (IN2, "<", $ARGV[1]) || die "Can't open limits.csv:$!\n";
+open (IN2, "<", $limits) || die "Can't open limits.txt:$!\n";
 @range = <IN2>;
 close IN2;
 
@@ -87,16 +118,20 @@ chomp $lower;
 $upper = $range[1];
 chomp $upper;
 
-# print longest ORF without doing any size filtering yet
+# open outfile for longest nt ORFs, filtered, outliers removed
+open(OUT2, ">>", $cds_out2) || die "Error cannot open cds_out2: $!\n";
+
+# print longest ORFs before and after removing outliers
 while ($otus[$i]) {
 	$otu = $otus[$i];
 
 	@longest =  sort { $length{$otu}{$a} <=> $length{$otu}{$b} } keys %{$length{$otu}};
 	$longest = $longest[-1]; #inner key to longest is at bottom of array
 	$length = $length{$otu}{$longest};
+
 	if ($length >= $lower && $length <= $upper) {
-		$seq = $seq{$otu}{$longest};
-		print STDOUT ">$otu\n$seq\n";
+		$seq2 = $seq{$otu}{$longest};
+		print OUT2 ">$otu\n$seq2\n";
 		$i++;
 		next;
 	}
@@ -106,6 +141,8 @@ while ($otus[$i]) {
 	}
 }
 $i=0;
+
+close OUT2;
 
 #######################################################
 # create subroutine to parse FASTA header
