@@ -149,6 +149,24 @@ conda deactivate
 
 ## Implementation notes
 
+### Installing Conda and Snakemake
+
+Conda is an open source package and envirobnment management system.  Miniconda is a lightweight version of conda that only contains conda, python, and their dependencies.  Using conda and the environment.yml file provided here can help get all the necessary programs in one place to run this pipeline.  Snakemake is a Python-based workflow management tool meant to define the rules for running this bioinformatic pipeline.  There is no need to edit the snakefile or snakefile_alt files directly.  Changes to select parameters can be made in the config.yaml pipeline.  If you install Conda and activate the environment provided, then you will also get the correct versions of the open source programs used in this pipeline including Snakemake v3.13.3.
+
+Install miniconda as follows:
+
+```linux
+# Download miniconda3
+wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+
+# Install miniconda3
+sh Miniconda3-latest-Linux-x86_64.sh
+
+# Add conda to your PATH, ex. to ~/bin
+cd ~/bin
+ln -s miniconda3/bin/conda conda
+```
+
 ### Check program versions
 
 Ensure that the correct programs from the environment are being used.
