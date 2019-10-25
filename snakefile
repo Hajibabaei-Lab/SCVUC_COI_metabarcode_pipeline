@@ -31,28 +31,31 @@ SAMPLES_UNIQUE = list(set(SAMPLES))
 raw_sample_forward_wildcard=config["raw_sample_forward_wildcard"]
 
 dir=config["dir"]
-stats_out="{sample}.stats"
-raw1_stats_out=dir+"/stats/R1/"+stats_out
+R1stats_out="{sample}.R1stats"
+raw1_stats_out=dir+"/stats/"+R1stats_out
 cat_raw1_stats_out=dir+"/stats/R1.stats"
 
 raw_sample_reverse_wildcard=config["raw_sample_reverse_wildcard"]
-raw2_stats_out=dir+"/stats/R2/"+stats_out
+R2stats_out="{sample}.R2stats"
+raw2_stats_out=dir+"/stats/"+R2stats_out
 cat_raw2_stats_out=dir+"/stats/R2.stats"
 
-#dir=config["dir"]
 fastq_gz="{sample}.fastq.gz"
 seqprep_out=dir+"/paired/"+fastq_gz
-paired_stats_out=dir+"/stats/paired/"+stats_out
+Pstats_out="{sample}.Pstats"
+paired_stats_out=dir+"/stats/"+Pstats_out
 cat_paired_stats_out=dir+"/stats/paired.stats"
 
 # 2_Trim reads
 cutadapt_f_out=dir+"/Fprimer_trimmed/"+fastq_gz
-Ftrimmed_stats_out=dir+"/stats/Ftrimmed/"+stats_out
+Fstats_out="{sample}.Fstats"
+Ftrimmed_stats_out=dir+"/stats/"+Fstats_out
 cat_Ftrimmed_stats_out=dir+"/stats/Ftrimmed.stats"
 
 fasta_gz="{sample}.fasta.gz"
 cutadapt_r_out=dir+"/Rprimer_trimmed/"+fasta_gz
-Rtrimmed_stats_out=dir+"/stats/Rtrimmed/"+stats_out
+Rstats_out="{sample}.Rstats"
+Rtrimmed_stats_out=dir+"/stats/"+Rstats_out
 cat_Rtrimmed_stats_out=dir+"/stats/Rtrimmed.stats"
 
 # 3_Concatenate samples for global analysis
@@ -73,7 +76,7 @@ usearch_log=dir+"/usearch.log"
 # 6_Get CDS
 orf_out=dir+"/cds.fasta.tmp"
 cds_out=dir+"/cds.fasta.tmp2"
-range=dir+"/limits.csv"
+range=dir+"/limits.txt"
 plot=dir+"/cds.pdf"
 cds_out2=dir+"/cds.fasta"
 
@@ -116,7 +119,7 @@ rule all:
 		expand(Rtrimmed_stats_out, sample=SAMPLES_UNIQUE),
 		cat_Rtrimmed_stats_out,
 		# 2_Trim reads (edit fasta header)
-#		expand(concatenate_pattern, sample=SAMPLES)
+#		expand(concatenate_pattern, sample=SAMPLES_UNIQUE)
 		# 3_Concatenate samples for global analysis
 #		output
 		# 3_Concatenate samples for global analysis (edit fasta header)
@@ -127,12 +130,10 @@ rule all:
 #		vsearch_out
 		# 5_Get CDS, translate ESVs into every possible ORF
 #		orf_out
-		# 5_Get CDS, filter CDS, keep longest
+		# 5_Get longest ORFs, calc outliers, hist, longest filtered ORFs
 #		cds_out
-		# 5_Get CDS, calculate range of CDS lengths
-#		plot,
-#		range,
-		# 5_Get CDS, filter CDS, use range cutoffs
+#		plot
+#		range
 #		cds_out2
 		# 6_Denoise reads
 #		usearch_out
@@ -154,7 +155,7 @@ rule raw1_stats:
 	input: 
 		raw_sample_forward_wildcard
 	output:
-		raw1_stats_out
+		temp(raw1_stats_out)
 	shell:
 		"perl perl_scripts/fastq_gz_stats.plx {input} >> {output}"
 
@@ -178,7 +179,7 @@ rule raw2_stats:
 	input: 
 		raw_sample_reverse_wildcard
 	output:
-		raw2_stats_out
+		temp(raw2_stats_out)
 	shell:
 		"perl perl_scripts/fastq_gz_stats.plx {input} >> {output}"
 
@@ -217,7 +218,7 @@ rule paired_stats:
 	input: 
 		seqprep_out
 	output:
-		paired_stats_out
+		temp(paired_stats_out)
 	shell:
 		"perl perl_scripts/fastq_gz_stats.plx {input} >> {output}"
 
@@ -253,7 +254,7 @@ rule Ftrimmed_stats:
 	input: 
 		cutadapt_f_out
 	output:
-		Ftrimmed_stats_out
+		temp(Ftrimmed_stats_out)
 	shell:
 		"perl perl_scripts/fastq_gz_stats.plx {input} >> {output}"
 
@@ -289,7 +290,7 @@ rule Rtrimmed_stats:
 	input: 
 		cutadapt_r_out
 	output:
-		Rtrimmed_stats_out
+		temp(Rtrimmed_stats_out)
 	shell:
 		"perl perl_scripts/fasta_gz_stats.plx {input} >> {output}"
 
@@ -311,7 +312,7 @@ rule edit_fasta_header1:
 	input:
 		cutadapt_r_out
 	output:
-		concatenate_pattern
+		temp(concatenate_pattern)
 	threads: 1
 	shell:
 		"perl perl_scripts/rename_fasta_gzip.plx {input} > {output}"
@@ -322,7 +323,7 @@ rule edit_fasta_header1:
 
 rule concatenate:
 	input:
-		expand(concatenate_pattern, sample=SAMPLES)
+		expand(concatenate_pattern, sample=SAMPLES_UNIQUE)
 	output:
 		temp(output)
 	threads: 1
@@ -396,39 +397,18 @@ rule get_orfs:
 		"ORFfinder -in {input} -g {config[ORFFINDER][g]} -s {config[ORFFINDER][s]} -out {output} -outfmt {config[ORFFINDER][outfmt]}"
 
 #######################################################################
-# Get CDS, get longest CDS
-
-rule filter_cds:
-	input:
-		orf_out
-	output:
-		cds_out
-	shell:
-		"perl perl_scripts/get_longest_orf_nt2.plx {input} > {output}"
-
-#######################################################################
-# Calculate outliers
-
-rule find_outliers:
-	input:
-		cds_out
-	output:
-		out1=plot,
-		out2=range
-	shell:
-		"Rscript R_scripts/length_hist.R {input} {output.out1} {output.out2}"
-
-#######################################################################
-# Get CDS, only keep CDS with lengths within 1.5*IQR
+# Get longest nt ORFs, calculate outliers, plot histogram in R, get longest filtered ORFs
 
 rule filter_cds2:
 	input:
-		orfs=orf_out,
-		range=range
+		orf_out
 	output:
-		cds_out2
+		out1=range,
+		out2=plot,
+		out3=cds_out,
+		out4=cds_out2
 	shell:
-		"perl perl_scripts/get_longest_orf_nt3.plx {input.orfs} {input.range} > {output}"
+		"perl perl_scripts/get_longest_orf_nt4.plx {input} {output.out1} {output.out2} {output.out3} {output.out4}"
 
 #######################################################################
 # Create ESV table
