@@ -237,7 +237,7 @@ rule cat_paired_stats:
 # Trim forward primer with CUTADAPT
 
 rule trim_forward_primer:
-	version: "2.4"
+	version: "2.6"
 	input:
 		seqprep_out
 	output:
@@ -273,7 +273,7 @@ rule cat_Ftrimmed_stats:
 # Trim reverse primer with CUTADAPT
 
 rule trim_reverse_primer:
-	version: "2.4"
+	version: "2.6"
 	input:
 		cutadapt_f_out
 	output:
