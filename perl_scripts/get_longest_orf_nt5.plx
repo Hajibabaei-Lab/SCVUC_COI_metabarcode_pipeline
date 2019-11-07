@@ -1,5 +1,5 @@
 #!/path/to/miniconda3/envs/myenv/bin/perl
-# Oct. 25, 2019 by Teresita M. Porter
+# Nov. 7, 2019 by Teresita M. Porter
 # Script to grab longest CDS from ORFfinder nucleotide output
 # Keep CDS with lengths within 25th percentile + 1.5*IQR to 75th percentile + 1.5*IQR
 # USAGE perl get_longest_orf.plx cds.fasta.tmp limits.txt cds.pdf cds.fasta.tmp2 cds.fasta
@@ -13,13 +13,18 @@ my $line;
 my $orf;
 my $otu;
 my $length;
+my $length2;
 my $flag=0;
 my $seq;
 my $seq1;
 my $seq2;
+my $longestOrf;
+my $longestOrf2;
 my $longest;
 my $lower;
 my $upper;
+my $num;
+my $num2;
 
 my $limits = $ARGV[1]; # matches range in snakefile
 my $plot = $ARGV[2]; # matches plot in snakefile
@@ -30,7 +35,12 @@ my $cds_out2 = $ARGV[4]; # matches cds_out2 in snakefile
 my @in;
 my @line;
 my @otus;
-my @longest;
+my @orfs;
+my @longestOrfs;
+my @longestOrfs2;
+my @orfs2;
+my @sorted;
+my @sorted2;
 my @range;
 
 # declare hash
@@ -90,13 +100,35 @@ open (OUT, ">>", $cds_out) || die "Error cannot open cds_out: $!\n";
 while ($otus[$i]) {
 	$otu = $otus[$i];
 
-	@longest =  sort { $length{$otu}{$a} <=> $length{$otu}{$b} } keys %{$length{$otu}};
-	$longest = $longest[-1]; #inner key to longest is at bottom of array
-	$length = $length{$otu}{$longest};
-	$seq1 = $seq{$otu}{$longest};
+	# get length of longest orfs
+	@orfs =  sort { $length{$otu}{$a} <=> $length{$otu}{$b} } keys %{$length{$otu}};
+	$longestOrf = $orfs[-1]; #inner key to longest is at bottom of array
+	$length = $length{$otu}{$longestOrf};
+
+	# get array with all longest orfs (there may be a few equally long orfs)
+	foreach $orf (keys %{$length{$otu}}) {
+		if ($length{$otu}{$orf} == $length) {
+			push(@longestOrfs, $orf);
+		}
+		else {
+			next;
+		}
+	}
+
+	# get number of equally long orfs 
+	$num = scalar(@longestOrfs);
+
+	# ascending sort longest OrfsIDs to get the first one with longest length
+	if ($num > 1) {
+		@sorted = sort { number_strip($a) <=> number_strip($b) } @longestOrfs;
+		$longestOrf = $sorted[0];
+	}
+
+	$seq1 = $seq{$otu}{$longestOrf};
 	print OUT ">$otu\n$seq1\n";
 
 	$i++;
+	@longestOrfs=();
 	next;
 }
 $i=0;
@@ -125,12 +157,28 @@ open(OUT2, ">>", $cds_out2) || die "Error cannot open cds_out2: $!\n";
 while ($otus[$i]) {
 	$otu = $otus[$i];
 
-	@longest =  sort { $length{$otu}{$a} <=> $length{$otu}{$b} } keys %{$length{$otu}};
-	$longest = $longest[-1]; #inner key to longest is at bottom of array
-	$length = $length{$otu}{$longest};
+	# get length of longest orfs
+	@orfs2 =  sort { $length{$otu}{$a} <=> $length{$otu}{$b} } keys %{$length{$otu}};
+	$longestOrf2 = $orfs2[-1]; #inner key to longest is at bottom of array
+	$length2 = $length{$otu}{$longestOrf2};
 
-	if ($length >= $lower && $length <= $upper) {
-		$seq2 = $seq{$otu}{$longest};
+	# get array with all longest orfs (there may be a few equally long orfs)
+	foreach $orf (keys %{$length{$otu}}) {
+		if ($length{$otu}{$orf} == $length2) {
+			push(@longestOrfs2, $orf);
+		}
+	}
+
+	$num2 = scalar(@longestOrfs2);
+
+	# ascending sort longest OrfsIDs to get the first one with longest length
+	if ($num2 > 1 ) {
+		@sorted2 = sort { number_strip($a) <=> number_strip($b) } @longestOrfs2;
+		$longestOrf2 = $sorted2[0];
+	}
+
+	if ($length2 >= $lower && $length2 <= $upper) {
+		$seq2 = $seq{$otu}{$longestOrf2};
 		print OUT2 ">$otu\n$seq2\n";
 		$i++;
 		next;
@@ -145,7 +193,16 @@ $i=0;
 close OUT2;
 
 #######################################################
-# create subroutine to parse FASTA header
+# subroutine to get number from OrfID
+
+sub number_strip {
+    my $line = shift;
+    my ($num) = $line =~ /(\d+)/;
+    return $num;
+}
+
+#######################################################
+# subroutine to parse FASTA header
 sub parse_header {
 
 my $line = $_[0];

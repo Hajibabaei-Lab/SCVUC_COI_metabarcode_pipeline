@@ -140,9 +140,9 @@ rule all:
 		# 7_Create ESV table
 #		vsearch_out2
 		# 8_Taxonomic assignment
-#		rdp_out
+#		rdp_out,
 		# 8_Taxonomic assignment (add read numbers)
-#		rdp_csv
+#		rdp_csv,
 		# 8_Taxonomic assignment (edit ESV id's to include amplicon name) [Final output file]
 		rdp_csv2
 	 
@@ -394,7 +394,7 @@ rule get_orfs:
 	output:
 		orf_out
 	shell:
-		"ORFfinder -in {input} -g {config[ORFFINDER][g]} -s {config[ORFFINDER][s]} -out {output} -outfmt {config[ORFFINDER][outfmt]}"
+		"ORFfinder -in {input} -g {config[ORFFINDER][g]} -s {config[ORFFINDER][s]} -ml {config[ORFFINDER][ml]} -n {config[ORFFINDER][n]} -strand {config[ORFFINDER][strand]} -out {output} -outfmt {config[ORFFINDER][outfmt]}"
 
 #######################################################################
 # Get longest nt ORFs, calculate outliers, plot histogram in R, get longest filtered ORFs
@@ -408,7 +408,7 @@ rule filter_cds2:
 		out3=cds_out,
 		out4=cds_out2
 	shell:
-		"perl perl_scripts/get_longest_orf_nt4.plx {input} {output.out1} {output.out2} {output.out3} {output.out4}"
+		"perl perl_scripts/get_longest_orf_nt5.plx {input} {output.out1} {output.out2} {output.out3} {output.out4}"
 
 #######################################################################
 # Create ESV table
@@ -437,7 +437,7 @@ rule taxonomic_assignment:
 	input:
 		cds_out2
 	output:
-		temp(rdp_out)
+		rdp_out
 	shell:
 		"java -Xmx8g -jar {config[RDP][jar]} classify -t {config[RDP][t]} -o {output} {input}"
 	
@@ -451,7 +451,7 @@ rule map_read_number:
 		table=vsearch_out2,
 		rdp=rdp_out
 	output:
-		temp(rdp_csv)
+		rdp_csv
 	shell:
 		"perl perl_scripts/add_abundance_to_rdp_out4.plx {input.table} {input.rdp} > {output}"
 
