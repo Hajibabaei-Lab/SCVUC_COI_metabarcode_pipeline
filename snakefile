@@ -1,4 +1,4 @@
-""" SCVUC v3 COI mtDNA metabarcode pipeline
+""" SCVUC v4 COI mtDNA metabarcode pipeline
 
 Metabarcode pipeline to process Illumina MiSeq reads as follows:
 
@@ -6,13 +6,11 @@ Metabarcode pipeline to process Illumina MiSeq reads as follows:
 2_Trim reads
 3_Concatenate samples for global analysis
 4_Dereplicate reads
-5_Get CDS
-6_Create denoised ESVs
-7_Create ESV table
-8_Taxonomic assignment
-
-Note:
-If you get a memory error at the USEARCH unoise3 denoising step, then use the COI alternate metabarcode pipeline instead.
+5_Get longest open reading frames, outliers removed
+6_Denoise ESVs
+7_Remove chimeras
+8_Create ESV x sample table
+9_Taxonomic assignment
 
 """
 
@@ -66,25 +64,26 @@ output2=dir+"/cat.fasta"
 gzip_out=dir+"/cat.fasta.gz"
 
 # 4_Dereplicate reads
-vsearch_out=dir+"/cat.uniques"
-vsearch_log=dir+"/dereplication.log"
+dereplicate_out=dir+"/cat.uniques"
+dereplicate_log=dir+"/dereplication.log"
 
 # 5_Create denoised ESVs
-usearch_out=dir+"/cat.denoised"
-usearch_log=dir+"/usearch.log"
+denoise_out=dir+"/cat.denoised"
+denoise_log=dir+"/denoising.log"
 
-# 6_Get CDS
-orf_out=dir+"/cds.fasta.tmp"
-cds_out=dir+"/cds.fasta.tmp2"
-range=dir+"/limits.txt"
-plot=dir+"/cds.pdf"
-cds_out2=dir+"/cds.fasta"
+# 6_Chimera check
+chimera_out=dir+"/cat.denoised.nonchimeras"
+chimera_log=dir+"/chimeraRemoval.log"
 
-# 7_Create ESV table
-vsearch_out2=dir+"/ESV.table"
-vsearch_log2=dir+"/table.log"
+# 7_Get CDS
+orf_out=dir+"/orfs.fasta"
+longest_orf_out=dir+"/longest.orfs.fasta"
 
-# 8_Taxonomic assignment
+# 8_Create ESV table
+table_out=dir+"/ESV.table"
+table_log=dir+"/table.log"
+
+# 9_Taxonomic assignment
 rdp_out=dir+"/rdp.out.tmp"
 rdp_csv=dir+"/rdp.csv.tmp"
 rdp_csv2=dir+"/rdp.csv"
@@ -127,23 +126,22 @@ rule all:
 		# 3_Concatenate samples for global analysis (compress file)
 #		gzip_out
 		# 4_Dereplicate reads
-#		vsearch_out
-		# 5_Get CDS, translate ESVs into every possible ORF
+#		dereplicate_out
+		# 5_Denoise reads
+#		denoise_out
+		# 6_Chimera check
+#		chimera_out
+		# 7_Get CDS, translate ESVs into every possible ORF (plus strand)
 #		orf_out
-		# 5_Get longest ORFs, calc outliers, hist, longest filtered ORFs
-#		cds_out
-#		plot
-#		range
-#		cds_out2
-		# 6_Denoise reads
-#		usearch_out
-		# 7_Create ESV table
-#		vsearch_out2
-		# 8_Taxonomic assignment
+		# 7_Get longest ORFs, outliers removed
+#		longest_orf_out
+		# 8_Create ESV table
+#		table_out
+		# 9_Taxonomic assignment
 #		rdp_out,
-		# 8_Taxonomic assignment (add read numbers)
+		# 9_Taxonomic assignment (add read numbers)
 #		rdp_csv,
-		# 8_Taxonomic assignment (edit ESV id's to include amplicon name) [Final output file]
+		# 9_Taxonomic assignment (edit ESV id's to include amplicon name) [Final output file]
 		rdp_csv2
 	 
 #######################################################################
@@ -358,31 +356,40 @@ rule compress:
 # Dereplicate and track reads with VSEARCH
 
 rule dereplicate:
-	version: "2.13.6"
+	version: "2.14.1"
 	input:
 		gzip_out
 	output:
-		vsearch_out
-	log: vsearch_log
+		dereplicate_out
+	log: dereplicate_log
 	shell:
 		"vsearch --derep_fulllength {input} --output {output} --sizein --sizeout --log {log}"
 
 #######################################################################
-# Denoise with USEARCH
-# Make sure this is installed locally and in your PATH
-# I changed the default name of the program to 'usearch11' to be more concise
-# redirect stderr to stdout(&1) so it all gets printed out into a log file
+# Denoise with VSEARCH using unoise3 algorithm (chimera removal must be done separately in next step)
 
 rule denoise:
-	version: "11.0.667_i86linux32"
+	version: "2.14.1"
 	input:
-		vsearch_out
+		dereplicate_out
 	output:
-		usearch_out
-	log: usearch_log
+		denoise_out
+	log: denoise_log
 	shell:
-		"usearch11 -unoise3 {input} -zotus {output} -minsize {config[USEARCH][minsize]} > {log} 2>&1"
+		"vsearch --cluster_unoise {input} --sizein --sizeout --minsize {config[VSEARCH_DENOISE][minsize]} --centroids {output} --log {log}"
 
+#######################################################################
+# Chimera removal with VSEARCH using uchime_denovo3 algorithm
+
+rule chimera_removal:
+	version: "2.14.1"
+	input:
+		denoise_out
+	output:
+		chimera_out
+	log: chimera_log
+	shell:
+		"vsearch --uchime3_denovo {input} --sizein --xsize --nonchimeras {output} --relabel 'Zotu' --log {log}"
 
 #######################################################################
 # Get CDS, first translate ESVs into every possible ORF
@@ -390,52 +397,49 @@ rule denoise:
 rule get_orfs:
 	version: "0.4.3"
 	input:
-		usearch_out
+		chimera_out
 	output:
 		orf_out
 	shell:
 		"ORFfinder -in {input} -g {config[ORFFINDER][g]} -s {config[ORFFINDER][s]} -ml {config[ORFFINDER][ml]} -n {config[ORFFINDER][n]} -strand {config[ORFFINDER][strand]} -out {output} -outfmt {config[ORFFINDER][outfmt]}"
 
 #######################################################################
-# Get longest nt ORFs, calculate outliers, plot histogram in R, get longest filtered ORFs
+# Get longest nt ORFs, outliers removed
 
 rule filter_cds2:
 	input:
 		orf_out
 	output:
-		out1=range,
-		out2=plot,
-		out3=cds_out,
-		out4=cds_out2
+		longest_orf_out
 	shell:
-		"perl perl_scripts/get_longest_orf_nt5.plx {input} {output.out1} {output.out2} {output.out3} {output.out4}"
+		"perl perl_scripts/parse_orfs3.plx {input} {output}"
 
 #######################################################################
 # Create ESV table
 
 rule create_ESV_table:
-	version: "2.13.16"
+	version: "2.14.1"
 	input:
-		usearch_global=gzip_out,
-		db=cds_out2
+		vsearch_global=gzip_out,
+		db=longest_orf_out
 	output:
-		vsearch_out2
-	threads: config["VSEARCH"]["t"]
-	log: vsearch_log2
+		table_out
+	threads: config["VSEARCH_TABLE"]["t"]
+	log: table_log
 	shell:
-		"vsearch --threads {threads} --usearch_global {input.usearch_global} --db {input.db} --id 1.0 --otutabout {output} --log {log}"
+		"vsearch --threads {threads} --usearch_global {input.vsearch_global} --db {input.db} --id 1.0 --otutabout {output} --log {log}"
 
 #######################################################################
 # Taxonomic assignment
 
 # Use the RDP classifier for taxonomic assignment
-# Make sure this is installed locally (do not use the old 2.2 version available from conda), download the v2.12 from sourceforge, indicate the path to the classifeir in the config file
+# Make sure this is installed locally (do not use the old 2.2 version available from conda), download the v2.12 from sourceforge, indicate the path to the classifier in the config file
 # Be sure to indicate the location of the trained reference database properties file in the config file
 
 rule taxonomic_assignment:
 	version: "2.12"
 	input:
-		cds_out2
+		longest_orf_out
 	output:
 		rdp_out
 	shell:
@@ -448,7 +452,7 @@ rule taxonomic_assignment:
 
 rule map_read_number:
 	input:
-		table=vsearch_out2,
+		table=table_out,
 		rdp=rdp_out
 	output:
 		rdp_csv
