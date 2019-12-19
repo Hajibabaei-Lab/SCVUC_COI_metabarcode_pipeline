@@ -1,4 +1,4 @@
-#!/home/terri/miniconda3/envs/myenv/bin/perl
+#!/path/to/miniconda3/envs/myenv/bin/perl
 # Dec. 17, 2019 by Teresita M. Porter
 # Accomodate FASTA header names ORF_otu only for the SCVUC pipeline
 # calculate cutoffs to remove nt orfs with length outliers
