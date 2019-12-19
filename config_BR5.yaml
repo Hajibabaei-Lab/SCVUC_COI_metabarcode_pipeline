@@ -1,7 +1,7 @@
-# Configuration file for SCVUCv3
+# Configuration file for SCVUCv4
 
 # Author: Teresita M. Porter
-# Date: Nov. 7, 2019
+# Date: Dec. 19, 2019
 
 ############################################################################
 # General pipeline settings
@@ -17,7 +17,6 @@
 # This directory contains raw reads (all of them or from just one run)
 # Only use compressed fastq files with this pipeline, ex. fastq.gz
 # For the standard pipeline, call the directory "data"
-# For the alternate pipeline, call the rectory "run1_data", "run2_data", etc.
 raw: "data"
 
 # Indicate 'sample' and 'read' wildcards in raw filenames:
@@ -48,7 +47,9 @@ SEQPREP:
 # Primer trimming
 ############################################################################
 
-# CUTADAPT parameters
+# CUTADAPT parameters for the COI-BR5 amplicon
+# FWD primer is 'B' from Hajibabei et al., 2012
+# REV primer is 'ArR5' from Gibson et al., 2014 (shown in 5' - 3' direction on the reverse strand)
 CUTADAPT_FWD:
     g: "CCNGAYATRGCNTTYCCNCG"
     m: 150
@@ -68,15 +69,8 @@ CUTADAPT_REV:
 
 # Indicate a directory name here that is short and simple with no spaces or weird punctuation
 # For the standard pipeline, a good directory name would be the amplicon, ex. "BR5"
-# For the alternate pipeline, a good directory name would be the run number, ex. "run1_out"
 
 dir: "BR5"
-
-# VSEARCH params
-VSEARCH:
-# Indicate number of threads to use
-# Do not exceed the number of jobs allotted to run the whole pipeline ('jobs' above)
-    t: 24
 
 ############################################################################
 # Denoising
@@ -85,7 +79,7 @@ VSEARCH:
 # Indicate minimum number of reads per cluster to retain
 # Here, remove all singletons and doubletons, retain clusters with 3+ reads
 
-USEARCH:
+VSEARCH_DENOISE:
     minsize: 3
 
 ############################################################################
@@ -123,6 +117,17 @@ ORFFINDER:
     outfmt: 1
 
 ############################################################################
+# ESV x sample table
+############################################################################
+
+# VSEARCH params
+VSEARCH_TABLE:
+# Indicate number of threads to use
+# Do not exceed the number of jobs allotted to run the whole pipeline ('jobs' above)
+    t: 24
+
+
+############################################################################
 # Taxonomic assignment
 ############################################################################
 
@@ -131,8 +136,8 @@ ORFFINDER:
 # COI Classifier v4 based on sequences mined from GenBank and BOLD but compatible with the RDP classifier is available from GitHub https://github.com/Hajibabaei-Lab/SCVUC_COI_metabarcode_pipeline
 
 RDP:
-    jar: "/path/to/rdp_classifier_2.12/dist/classifier.jar"
-    t: "/path/to/CO1Classifier/v4/NCBI_BOLD_merged/mydata/mydata_trained/rRNAClassifier.properties"
+    jar: "/home/terri/rdp_classifier_2.12/dist/classifier.jar"
+    t: "/home/terri/CO1Classifier/v4/NCBI_BOLD_merged/mydata/mydata_trained/rRNAClassifier.properties"
 
 ############################################################################
 # Reformat CSV
