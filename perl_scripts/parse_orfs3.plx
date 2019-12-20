@@ -1,5 +1,5 @@
 #!/path/to/miniconda3/envs/myenv/bin/perl
-# Dec. 17, 2019 by Teresita M. Porter
+# Dec. 20, 2019 by Teresita M. Porter
 # Accomodate FASTA header names ORF_otu only for the SCVUC pipeline
 # calculate cutoffs to remove nt orfs with length outliers
 # output filtered longest orfs (putative outliers removed)
@@ -13,13 +13,14 @@ use Data::Dumper;
 my $otu;
 my $orf;
 my $length;
+my $num;
 my $ntseq;
 my $lq = 25; #lower quartile
 my $uq = 75; #upper quartile
 my $percentile25;
 my $percentile75;
 my $iqr;
-my $longest;
+my $longestOrfID;
 my $min;
 my $max;
 my $i=0;
@@ -29,7 +30,9 @@ my $outfile1 = $ARGV[1];
 my @nt;
 my @lengths;
 my @otus;
-my @longest;
+my @longestOrfID;
+my @longestOrfID2;
+my @sortedOrfID;
 
 # declare hash
 my %ntLength; # key1 = otu, key2 = orf, value = length
@@ -49,18 +52,47 @@ my ($ref1, $ref2) = parse_nt_orf(\@nt,\%ntLength, \%ntSeq);
 %ntLength = %{$ref1};
 %ntSeq = %{$ref2};
 
+# get unique otu keys
+@otus = keys %ntLength;
+
 # get longest orfs
-foreach $otu ( keys %ntLength ) {
-	# ascending sort
-	@longest =  sort { $ntLength{$otu}{$a} <=> $ntLength{$otu}{$b} } keys %{ $ntLength{$otu} };
-	$longest = $longest[-1]; #inner key to longest is at bottom of array
+while ($otus[$i] ) {
+	$otu = $otus[$i];
+
+	# ascending sort all orfs for an otu
+	@longestOrfID =  sort { $ntLength{$otu}{$a} <=> $ntLength{$otu}{$b} } keys %{ $ntLength{$otu} };
+	#inner key to longest is at bottom of array
+	$longestOrfID = $longestOrfID[-1];
 	# get length and seq from original hashes
-	$length = $ntLength{$otu}{$longest};
-	$ntseq = $ntSeq{$otu}{$longest};
+	$length = $ntLength{$otu}{$longestOrfID};
 	# put longest orf length and seq into new hashes 
-	$ntLength_longest{$otu}{$longest} = $length;
-	$ntSeq_longest{$otu}{$longest} = $ntseq;
+
+	# grab all orfs (for an otu) that are equally long 
+	foreach $orf (keys %{ $ntLength{$otu} }) {
+		if ($ntLength{$otu}{$orf} == $length) {
+			push(@longestOrfID2, $orf)
+		}
+	}
+
+	# count nubmer of equally long orfs
+	$num = scalar(@longestOrfID2);
+
+	if ($num > 1) {
+		# ascending numeric sort of just the longest orf numbers
+		@sortedOrfID = sort { number_strip($a) <=> number_strip($b) } @longestOrfID2;
+		# keep the first one
+		$longestOrfID = $sortedOrfID[0];
+	}
+
+	$ntseq = $ntSeq{$otu}{$longestOrfID};
+	
+	# put longest orf length and seq into new hashes
+	$ntLength_longest{$otu}{$longestOrfID} = $length;
+	$ntSeq_longest{$otu}{$longestOrfID} = $ntseq;
+	$i++;
+
 }
+$i=0;
 
 # grab length of all longest orfs
 foreach $otu ( keys %ntLength_longest) {
@@ -83,11 +115,8 @@ $min = $percentile25 - ($iqr * 1.5);
 # calculate upper cutoff: 75th percentile + 1.5*IQR
 $max = $percentile75 + ($iqr * 1.5);
 
-# testing
-#print "min $min\t max $max\n";
-
 # create outfiles
-open (OUT1, ">>", $outfile1) || die "Cannot open orf_nt.fasta.filtered:$!\n";
+open (OUT1, ">>", $outfile1) || die "Cannot open outfile:$!\n";
 
 foreach $otu ( keys %ntLength_longest ) {
 	foreach $orf (keys %{ $ntLength_longest{$otu} }) {
@@ -98,6 +127,15 @@ foreach $otu ( keys %ntLength_longest ) {
 			print OUT1 ">".$otu."\n".$ntseq."\n";
 		}
 	}
+}
+
+#######################################################
+# subroutine to get number from OrfID
+
+sub number_strip {
+    my $line = shift;
+    my ($num) = $line =~ /(\d+)/;
+    return $num;
 }
 
 #######################################################
