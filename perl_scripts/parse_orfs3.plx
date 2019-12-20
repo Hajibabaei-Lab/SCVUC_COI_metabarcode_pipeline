@@ -63,7 +63,7 @@ while ($otus[$i] ) {
 	@longestOrfID =  sort { $ntLength{$otu}{$a} <=> $ntLength{$otu}{$b} } keys %{ $ntLength{$otu} };
 	#inner key to longest is at bottom of array
 	$longestOrfID = $longestOrfID[-1];
-	# get length and seq from original hashes
+	# get length for longest orf
 	$length = $ntLength{$otu}{$longestOrfID};
 	# put longest orf length and seq into new hashes 
 
