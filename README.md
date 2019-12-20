@@ -1,6 +1,6 @@
 # README
 
-This repository processes COI metabarcodes. **SCVUC** refers to the programs, algorithms, and reference datasets used in this data flow: **S**EQPREP, **C**UTADAPT, **V**SEARCH, **U**NOISE, **C**OI classifier. 
+This repository contains a snakmake pipeline to processes Illumina paired-end COI metabarcodes. **SCVUC** refers to the programs, algorithms, and reference datasets used in this data flow: **S**EQPREP, **C**UTADAPT, **V**SEARCH, **U**NOISE, **C**OI classifier. 
 
 The pipeline begins with raw paired-end Illumina MiSeq fastq.gz files. Reads are paired. Primers are trimmed. All the samples are pooled for a global analysis. Reads are dereplicated and denoised producing a reference set of exact sequence variants (ESVs). ESVs are filtered again by retaining only the longest open reading frames (ORFs) and removing outliers (ORFs unusually sort or long).  These ORFs are taxonomically assigned using the COI mtDNA reference set available from https://github.com/terrimporter/CO1Classifier and is used with the RDP Classifier (Wang et al., 2007) available from https://sourceforge.net/projects/rdp-classifier/ .
 
