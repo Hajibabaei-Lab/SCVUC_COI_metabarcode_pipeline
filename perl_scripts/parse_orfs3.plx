@@ -65,7 +65,6 @@ while ($otus[$i] ) {
 	$longestOrfID = $longestOrfID[-1];
 	# get length for longest orf
 	$length = $ntLength{$otu}{$longestOrfID};
-	# put longest orf length and seq into new hashes 
 
 	# grab all orfs (for an otu) that are equally long 
 	foreach $orf (keys %{ $ntLength{$otu} }) {
