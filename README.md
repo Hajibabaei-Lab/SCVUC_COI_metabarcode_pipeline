@@ -1,10 +1,12 @@
 # README
 
-This repository contains a Snakemake pipeline to processes Illumina paired-end COI metabarcodes (Koster and Rahmann, 2012). **SCVUC** refers to the programs, algorithms, and reference datasets used in this data flow: **S**EQPREP, **C**UTADAPT, **V**SEARCH, **U**NOISE, **C**OI classifier. 
+This repository contains a conda environemnt and Snakemake pipeline to processes Illumina paired-end COI metabarcodes (Koster and Rahmann, 2012). **SCVUC** refers to the programs, algorithms, and reference datasets used in this data flow: **S**EQPREP, **C**UTADAPT, **V**SEARCH, **U**NOISE, **C**OI classifier. 
 
-The pipeline begins with raw paired-end Illumina MiSeq fastq.gz files. Reads are paired. Primers are trimmed. All the samples are pooled for a global analysis. Reads are dereplicated and denoised producing a reference set of exact sequence variants (ESVs). ESVs are filtered again by retaining only the longest open reading frames (ORFs) and removing outliers (ORFs unusually sort or long).  These ORFs are taxonomically assigned using the COI mtDNA reference set available from https://github.com/terrimporter/CO1Classifier and is used with the RDP Classifier (Wang et al., 2007) available from https://sourceforge.net/projects/rdp-classifier/ .
+## Overview
 
-This data flow has been developed using a conda environment and snakemake pipeline for improved reproducibility. It will be updated on a regular basis so check for the latest version at https://github.com/Hajibabaei-Lab/SCVUC_COI_metabarcode_pipeline/releases .
+The pipeline begins with raw paired-end Illumina MiSeq fastq.gz files.  Reads are paired.  Primers are trimmed.  All the samples are pooled for a global analysis.  Reads are dereplicated and denoised producing a reference set of exact sequence variants (ESVs). ESVs are filtered again by retaining only the longest open reading frames (ORFs) and removing outliers (ORFs unusually sort or long).  These ORFs are taxonomically assigned using the COI mtDNA reference set available from https://github.com/terrimporter/CO1Classifier and is used with the RDP Classifier (Wang et al., 2007) available from https://sourceforge.net/projects/rdp-classifier/ .
+
+This data flow will be updated on a regular basis so check for the latest version at https://github.com/Hajibabaei-Lab/SCVUC_COI_metabarcode_pipeline/releases .
 
 ## How to cite
 
@@ -12,7 +14,13 @@ If you use this dataflow or any of the provided scripts, consider citing the CO1
 
 ## Outline
 
-[Standard pipeline](#standard-pipeline)  
+[Pipeline details](##pipeline-details)  
+
+[Prepare your environment to run the pipeline](##prepare-your-environment-to-run-the-pipeline)  
+
+[Run the pipeline](##run-the-pipeline)  
+
+[Prepare your environment to run the pipeline](##prepare-your-environment-to-run-the-pipeline)  
 
 [Implementation notes](#implementation-notes)  
 
@@ -20,25 +28,21 @@ If you use this dataflow or any of the provided scripts, consider citing the CO1
 
 [Acknowledgements](#acknowledgements)  
 
-## Standard pipeline
+## Pipeline details
 
-### Overview of the standard pipeline
+If you are comfortable reading code, read through the snakefile to see how the pipeline runs as well as which programs and versions are used.  Otherwise you can just list all the programs in the conda environment, see [Implementation notes](#implementation-notes).  
 
-If you are comfortable reading code, read through the snakefile to see how the pipeline runs as well as which programs and versions are used.  Otherwise you can just list all the programs in the conda environment, see [Implementation notes](#implementation-notes) below.  
+Raw paired-end reads are merged using SEQPREP v1.3.2 from bioconda (St. John, 2016).  This step looks for a minimum Phred quality score of 20 in the overlap region, requires at least a 25bp overlap.
 
-#### A brief overview:
-
-Raw paired-end reads are merged using SEQPREP v1.3.2 from bioconda (St. John, 2016).  This step looks for a minimum Phred quality score of 20 in the overlap region, requires at least 25bp overlap.
-
-Primers are trimmed in two steps using CUTADAPT v2.6 from bioconda (Martin, 2011).  This step looks for a minimum Phred quality score of at least 20 at the ends, forward primer is trimmed first based on its sequence, no more than 3 N's allowed, trimmed reads need to be at least 150 bp, untrimmed reads are discarded.  The output from the first step, is used as in put for the second step.  This step looks for a minimum Phred quality score of at least 20 at the ends, the reverse primer is trimmed based on its sequence, no more than 3 N's allowed, trimmed reads need to be at least 150 bp, untrimmed reads are discarded.
+Primers are trimmed in two steps using CUTADAPT v2.6 from bioconda (Martin, 2011).  This step looks for a minimum Phred quality score of at least 20 at the ends, the forward primer is trimmed first based on its sequence, no more than 3 N's allowed, trimmed reads need to be at least 150 bp, untrimmed reads are discarded.  The output from the first step, is used as input for the second step.  This step looks for a minimum Phred quality score of at least 20 at the ends, the reverse primer is trimmed based on its sequence, no more than 3 N's allowed, trimmed reads need to be at least 150 bp, untrimmed reads are discarded.
 
 Files are reformatted and samples are combined for a global analysis.
 
 Reads are dereplicated (only unique sequences are retained) using VSEARCH v2.14.1 from bioconda (Rognes et al., 2016).
 
-Denoised exact sequence variants (ESVs) are generated using VSEARCH with the unoise3 algorithm (Edgar, 2016).  This step removes any PhiX contamination, sequences with predicted errors, and rare sequences.  This step produces zero-radius OTUs (Zotus) also referred to commonly as amplicon sequence variants (ASVs), ESVs, or 100% operational taxonomic unit (OTU) clusters.  Here, we define rare sequences to be sequence clusters containing only one or two reads (singletons and doubletons) and these are removed as 'noise'.  Putative chimeric sequences are then removed using VSEARCH.
+Denoised exact sequence variants (ESVs) are generated using VSEARCH with the unoise3 algorithm (Edgar, 2016).  This step removes any PhiX contamination, sequences with predicted errors, and rare sequences.  This step also produces zero-radius OTUs (Zotus) also referred to commonly as amplicon sequence variants (ASVs), ESVs, or 100% operational taxonomic unit (OTU) clusters.  Here, we define rare sequences to be sequence clusters containing only one or two reads (singletons and doubletons) and these are removed as 'noise'.  Putative chimeric sequences are then removed using the uchime3_denovo algorithm in VSEARCH.
 
-The ESVs are translated into every possible open reading frame (ORF) for the plus strand.  The longest ORFs are retained for each ESV and outliers are removed.  Outliers are identified as ORFs with lengths outside the range of the 25th percentile - 1.5\*IQR and the 75th percentile + 1.5\*IQR (IQR, inter quartile range).  This method should help to screen out the most obvious pseudogenes that may have a shorter than expected length due to sequence errors, deletions, and frameshifts, or longer than expected length due to insertions.  There is no guarantee that genuine coding sequences are not erroneously removed during this step.  If your dataset contains taxa with coding sequences known to be unusually shorter or longer than usual, then this filtering step should be ommitted from the pipeline and the ESV table and taxonomic assignments should be based on the cat.denoised.nonchimeras file directly, edit the snakemake file as follows:
+The ESVs are translated into every possible open reading frame (ORF) on the plus strand.  The longest ORFs are retained for each ESV and ESVs with outlier lengths are removed, i.e., ORFs that are too short or too long are removed.  Outliers are identified as ORFs with lengths outside the range of the 25th percentile - 1.5\*IQR and the 75th percentile + 1.5\*IQR (IQR, inter quartile range).  This method should help to screen out the most obvious pseudogenes that may have a shorter than expected length due to sequence errors, deletions, and frameshifts, or longer than expected lengths due to insertions.  There is no guarantee that genuine coding sequences are not erroneously removed during this step.  If your dataset contains taxa with coding sequences known to be unusually shorter or longer than usual, then this filtering step should be ommitted from the pipeline and the ESV table and taxonomic assignments should be based on the cat.denoised.nonchimeras file directly, edit the Snakemake file as follows:
 
 ```linux
 rule create_ESV_table:
@@ -50,15 +54,15 @@ rule taxonomic_assignment:
         chimera_out
 ```
 
-An ESV table that tracks read number for each ESV (longest open reading frame) sample is generated with VSEARCH.
+An ESV x sample table that tracks read number for each ESV (longest ORF) is generated with VSEARCH.
 
 COI mtDNA taxonomic assignments are made using the Ribosomal Database classifier v2.12 (RDP classifier) available from https://sourceforge.net/projects/rdp-classifier/ (Wang et al., 2007) using the COI classifier v4 reference dataset available from https://github.com/terrimporter/CO1Classifier (Porter and Hajibabaei, 2018 Sci Rep).
 
 The final output is reformatted to add read numbers for each sample and column headers to improve readability.
 
-Statistics are provided for various steps of the program are also provided.
+Statistics and log filfes are also provided for each major bioinformatic step.
 
-### Prepare your environment to run the pipeline
+## Prepare your environment to run the pipeline
 
 1. This pipeline includes a conda environment that provides most of the programs needed to run this pipeline (SNAKEMAKE, SEQPREP, CUTADAPT, VSEARCH, etc.).
 
@@ -88,7 +92,7 @@ mv ORFfinder ~/bin/.
 
 3. The pipeline also requires the RDP classifier for the taxonomic assignment step.  Although the RDP classifier v2.2 is available through conda, a newer v2.12 is available form SourceForge at https://sourceforge.net/projects/rdp-classifier/ .  Download it and take note of where the classifier.jar file is as this needs to be added to config.yaml .
 
-The RDP classifier comes with the training sets to classify 16S, fungal ITS and fungal LSU rDNA sequences.  To classify COI mtDNA sequences, obtain the COI classifier v4 reference set from GitHub 
+The RDP classifier comes with the training sets to classify 16S, fungal ITS, and fungal LSU rDNA sequences.  To classify COI mtDNA sequences, obtain the COI classifier v4 reference set from GitHub 
 https://github.com/terrimporter/CO1Classifier .  Take note of where the rRNAclassifier.properties file is as this needs to be added to the config.yaml .
 
 ```linux
@@ -116,22 +120,16 @@ mkdir data
 #!/path/to/miniconda3/envs/myenv/bin/perl
 ```
 
-### Run the standard pipeline
+## Run the pipeline
 
-Run snakemake by indicating the number of jobs or cores that are available to run the whole pipeline.  
+Run Snakemake by indicating the number of jobs or cores that are available to run the whole pipeline.  
 
 ```linux
 # Choose and/or edit the appropriate configuration file (ex. config_BR5.yaml, config_F230R.yaml)
 snakemake --jobs 24 --snakefile snakefile --configfile config_BR5.yaml
 ```
 
-You can view read number and length (min, max, mean, median, mode) statistics for each sample at steps of the bioinformatic pipeline.  A simple report can be generated like so, modify to summarize reports for different bioinformatic steps (raw reads, paired reads, primer trimmed reads):
-
-```linux
-# Generate a report for raw R1 reads
-cd stats/raw/R1
-cat *.stats > R1.stats
-```
+You can view read number and length (min, max, mean, median, mode) statistics for each sample at steps of the bioinformatic pipeline.  
 
 When you are done, deactivate the conda environment:
 
@@ -143,7 +141,7 @@ conda deactivate
 
 ### Installing Conda and Snakemake
 
-Conda is an open source package and envirobnment management system.  Miniconda is a lightweight version of conda that only contains conda, python, and their dependencies.  Using conda and the environment.yml file provided here can help get all the necessary programs in one place to run this pipeline.  Snakemake is a Python-based workflow management tool meant to define the rules for running this bioinformatic pipeline.  There is no need to edit the snakefile or snakefile_alt files directly.  Changes to select parameters can be made in the config.yaml pipeline.  If you install Conda and activate the environment provided, then you will also get the correct versions of the open source programs used in this pipeline including Snakemake v3.13.3.
+Conda is an open source package and environment management system.  Miniconda is a lightweight version of conda that only contains conda, python, and their dependencies.  Using conda and the environment.yml file provided here can help get all the necessary programs in one place to run this pipeline.  Snakemake is a Python-based workflow management tool meant to define the rules for running this bioinformatic pipeline.  There is usually no need to edit the snakefile file directly.  Changes to select parameters can be made in the config.yaml file.  If you install conda and activate the environment provided, then you will also get the correct versions of the open source programs used in this pipeline including Snakemake.
 
 Install miniconda as follows:
 
@@ -161,7 +159,7 @@ ln -s miniconda3/bin/conda conda
 
 ### Check program versions
 
-Ensure that the correct programs from the environment are being used.
+Ensure the program versions in the environment are being used.
 
 ```linux
 # create conda environment from file
@@ -173,13 +171,13 @@ conda activate myenv
 # list all programs available in the environment at once
 conda list > programs.list
 
-# or, inidivdually check that key programs in the conda environment are being used
+# you can check that key programs in the conda environment are being used (not locally installed versions)
 which SeqPrep
 which cutadapt
 which vsearch
 which perl
 
-# then, check their version numbers one at a time
+# you can also check their version numbers one at a time instead of running 'conda list'
 cutadapt --version
 vsearch --version
 ```
@@ -220,4 +218,4 @@ Wang, Q., Garrity, G. M., Tiedje, J. M., & Cole, J. R. (2007). Naive Bayesian Cl
 
 I would like to acknowedge funding from the Canadian government through the Genomics Research and Development Initiative (GRDI) EcoBiomics project.
 
-Last updated: December 19, 2019
+Last updated: December 20, 2019
