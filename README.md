@@ -1,6 +1,6 @@
 # README
 
-This repository contains a snakmake pipeline to processes Illumina paired-end COI metabarcodes. **SCVUC** refers to the programs, algorithms, and reference datasets used in this data flow: **S**EQPREP, **C**UTADAPT, **V**SEARCH, **U**NOISE, **C**OI classifier. 
+This repository contains a Snakemake pipeline to processes Illumina paired-end COI metabarcodes (Koster and Rahmann, 2012). **SCVUC** refers to the programs, algorithms, and reference datasets used in this data flow: **S**EQPREP, **C**UTADAPT, **V**SEARCH, **U**NOISE, **C**OI classifier. 
 
 The pipeline begins with raw paired-end Illumina MiSeq fastq.gz files. Reads are paired. Primers are trimmed. All the samples are pooled for a global analysis. Reads are dereplicated and denoised producing a reference set of exact sequence variants (ESVs). ESVs are filtered again by retaining only the longest open reading frames (ORFs) and removing outliers (ORFs unusually sort or long).  These ORFs are taxonomically assigned using the COI mtDNA reference set available from https://github.com/terrimporter/CO1Classifier and is used with the RDP Classifier (Wang et al., 2007) available from https://sourceforge.net/projects/rdp-classifier/ .
 
@@ -207,7 +207,8 @@ ln -s /path/to/script/script.sh commandName
 ## References
 
 Edgar, R. C. (2016). UNOISE2: improved error-correction for Illumina 16S and ITS amplicon sequencing. BioRxiv. doi:10.1101/081257 
-Gergely, S. (2018, January). Perl-rename. Retrieved from https://github.com/subogero/rename  
+Gergely, S. (2018, January). Perl-rename. Retrieved from https://github.com/subogero/rename 
+Koster, J., Rahmann, S. (2012) Snakemake - a scalable bioinformatics workflow engine.  Bioinformatics, 29(19): 2520-2522.
 Martin, M. (2011). Cutadapt removes adapter sequences from high-throughput sequencing reads. EMBnet. Journal, 17(1), pp–10.  
 Porter, T. M., & Hajibabaei, M. (2018). Automated high throughput animal CO1 metabarcode classification. Scientific Reports, 8, 4226.  
 Rognes, T., Flouri, T., Nichols, B., Quince, C., & Mahé, F. (2016). VSEARCH: a versatile open source tool for metagenomics. PeerJ, 4, e2584. doi:10.7717/peerj.2584  
