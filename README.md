@@ -166,7 +166,7 @@ Ensure the program versions in the environment are being used.
 conda env create -f environment.yml
 
 # activate the environment
-conda activate myenv
+conda activate myenv.3
 
 # list all programs available in the environment at once
 conda list > programs.list
