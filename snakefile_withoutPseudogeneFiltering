@@ -6,11 +6,10 @@ Metabarcode pipeline to process Illumina MiSeq reads as follows:
 2_Trim reads
 3_Concatenate samples for global analysis
 4_Dereplicate reads
-5_Get longest open reading frames, outliers removed
-6_Denoise ESVs
-7_Remove chimeras
-8_Create ESV x sample table
-9_Taxonomic assignment
+5_Denoise ESVs
+6_Remove chimeras
+7_Create ESV x sample table
+8_Taxonomic assignment
 
 """
 
@@ -75,15 +74,11 @@ denoise_log=dir+"/denoising.log"
 chimera_out=dir+"/cat.denoised.nonchimeras"
 chimera_log=dir+"/chimeraRemoval.log"
 
-# 7_Get CDS
-orf_out=dir+"/orfs.fasta"
-longest_orf_out=dir+"/longest.orfs.fasta"
-
-# 8_Create ESV table
+# 7_Create ESV table
 table_out=dir+"/ESV.table"
 table_log=dir+"/table.log"
 
-# 9_Taxonomic assignment
+# 8_Taxonomic assignment
 rdp_out=dir+"/rdp.out.tmp"
 rdp_csv=dir+"/rdp.csv.tmp"
 rdp_csv2=dir+"/rdp.csv"
@@ -131,10 +126,6 @@ rule all:
 #		denoise_out
 		# 6_Chimera check
 #		chimera_out
-		# 7_Get CDS, translate ESVs into every possible ORF (plus strand)
-#		orf_out
-		# 7_Get longest ORFs, outliers removed
-#		longest_orf_out
 		# 8_Create ESV table
 #		table_out
 		# 9_Taxonomic assignment
@@ -392,36 +383,14 @@ rule chimera_removal:
 		"vsearch --uchime3_denovo {input} --sizein --xsize --nonchimeras {output} --relabel 'Zotu' --log {log}"
 
 #######################################################################
-# Get CDS, first translate ESVs into every possible ORF
-
-rule get_orfs:
-	version: "0.4.3"
-	input:
-		chimera_out
-	output:
-		orf_out
-	shell:
-		"ORFfinder -in {input} -g {config[ORFFINDER][g]} -s {config[ORFFINDER][s]} -ml {config[ORFFINDER][ml]} -n {config[ORFFINDER][n]} -strand {config[ORFFINDER][strand]} -out {output} -outfmt {config[ORFFINDER][outfmt]}"
-
-#######################################################################
-# Get longest nt ORFs, outliers removed
-
-rule filter_cds2:
-	input:
-		orf_out
-	output:
-		longest_orf_out
-	shell:
-		"perl perl_scripts/parse_orfs3.plx {input} {output}"
-
-#######################################################################
 # Create ESV table
+# edited to run pipeline WITHOUT using longest ORFs
 
 rule create_ESV_table:
 	version: "2.14.1"
 	input:
 		vsearch_global=gzip_out,
-		db=longest_orf_out
+		db=chimera_out
 	output:
 		table_out
 	threads: config["VSEARCH_TABLE"]["t"]
@@ -432,6 +401,7 @@ rule create_ESV_table:
 #######################################################################
 # Taxonomic assignment
 
+# edited to run pipeline WITHOUT using longest ORFs
 # Use the RDP classifier for taxonomic assignment
 # Make sure this is installed locally (do not use the old 2.2 version available from conda), download the v2.12 from sourceforge, indicate the path to the classifier in the config file
 # Be sure to indicate the location of the trained reference database properties file in the config file
@@ -439,7 +409,7 @@ rule create_ESV_table:
 rule taxonomic_assignment:
 	version: "2.12"
 	input:
-		longest_orf_out
+		chimera_out
 	output:
 		rdp_out
 	shell:

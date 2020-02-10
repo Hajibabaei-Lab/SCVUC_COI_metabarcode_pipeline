@@ -49,7 +49,7 @@ SEQPREP:
 
 # CUTADAPT parameters for the COI-ml-jg amplicon
 # FWD primer is 'mlCOIintF' from Leray et al., 2013
-# REV primer is 'jgHCO2198' from Geller et al., 2013
+# REV primer is 'jgHCO2198' from Geller et al., 2013 (reverse complement)
 CUTADAPT_FWD:
     g: "GGWACWGGWTGAACWGTWTAYCCYCC"
     m: 150

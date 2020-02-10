@@ -1,7 +1,7 @@
 # Configuration file for SCVUCv4
 
 # Author: Teresita M. Porter
-# Date: Dec. 19, 2019
+# Date: Feb. 8, 2020
 
 ############################################################################
 # General pipeline settings
@@ -47,17 +47,17 @@ SEQPREP:
 # Primer trimming
 ############################################################################
 
-# CUTADAPT parameters for the COI-F230R amplicon
-# FWD primer is 'LCO1490' from Folmer et al., 1994
-# REV primer is '230R' from Gibson et al., 2015 (reverse complement)
+# CUTADAPT parameters for the COI-ml-jg amplicon
+# FWD primer is 'BF1' from Elbrecht & Leese, 2017
+# REV primer is 'BR2' from Elbrecht & Leese, 2017 (reverse complement)
 CUTADAPT_FWD:
-    g: "GGTCAACAAATCATAAAGATATTGG"
+    g: "ACWGGWTGRACWGTNTAYCC"
     m: 150
     q: "20,20"
     mn: 3
 
 CUTADAPT_REV:
-    a: "GCNTTYCCNCGNATAAAYAAYATAAG"
+    a: "TGRTTYTTYGGNCAYCCHGA"
     m: 150
     q: "20,20"
     mn: 3
@@ -70,7 +70,7 @@ CUTADAPT_REV:
 # Indicate a directory name here that is short and simple with no spaces or weird punctuation
 # For the standard pipeline, a good directory name would be the amplicon, ex. "BR5"
 
-dir: "F230R"
+dir: "BF1"
 
 ############################################################################
 # Denoising
@@ -148,4 +148,4 @@ RDP:
 # Ex. sed -e 's/^/amplicon_/g' infile > outfile
 # Below, enter the substitution pattern for sed to use (the part in single quotes above)
 
-SED: 's/^/F230R_/g'
+SED: 's/^/BF1_/g'

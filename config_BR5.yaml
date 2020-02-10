@@ -49,7 +49,7 @@ SEQPREP:
 
 # CUTADAPT parameters for the COI-BR5 amplicon
 # FWD primer is 'B' from Hajibabei et al., 2012
-# REV primer is 'ArR5' from Gibson et al., 2014 (shown in 5' - 3' direction on the reverse strand)
+# REV primer is 'ArR5' from Gibson et al.,2014 (reverse complement)
 CUTADAPT_FWD:
     g: "CCNGAYATRGCNTTYCCNCG"
     m: 150
