@@ -4,7 +4,7 @@ This repository contains a conda environemnt and Snakemake pipeline to processes
 
 ## Overview
 
-The pipeline begins with raw paired-end Illumina MiSeq fastq.gz files.  Reads are paired.  Primers are trimmed.  All the samples are pooled for a global analysis.  Reads are dereplicated and denoised producing a reference set of exact sequence variants (ESVs). ESVs are filtered again by retaining only the longest open reading frames (ORFs) and removing outliers (ORFs unusually sort or long).  These ORFs are taxonomically assigned using the COI mtDNA reference set available from https://github.com/terrimporter/CO1Classifier and is used with the RDP Classifier (Wang et al., 2007) available from https://sourceforge.net/projects/rdp-classifier/ .
+The pipeline begins with raw paired-end Illumina MiSeq fastq.gz files.  Reads are paired.  Primers are trimmed.  All the samples are pooled for a global analysis.  Reads are dereplicated and denoised producing a reference set of exact sequence variants (ESVs). ESVs are filtered again by retaining only the longest open reading frames (ORFs) and removing outliers (ORFs unusually sort or long).  These ORFs are taxonomically assigned using the COI mtDNA reference set available from https://github.com/terrimporter/CO1Classifier and is used with the RDP Classifier (Wang et al., 2007) available from https://sourceforge.net/projects/rdp-classifier/ .  The final output file contains taxonomic assignments and number of reads for each ESV and sample.  
 
 This data flow will be updated on a regular basis so check for the latest version at https://github.com/Hajibabaei-Lab/SCVUC_COI_metabarcode_pipeline/releases .
 
@@ -166,7 +166,7 @@ Ensure the program versions in the environment are being used.
 conda env create -f environment.yml
 
 # activate the environment
-conda activate myenv
+conda activate myenv.3
 
 # list all programs available in the environment at once
 conda list > programs.list
