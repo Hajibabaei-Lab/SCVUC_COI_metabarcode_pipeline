@@ -20,10 +20,6 @@ If you use this dataflow or any of the provided scripts, consider citing the CO1
 
 [Run the pipeline](#run-the-pipeline)  
 
-[Prepare your environment to run the pipeline](#prepare-your-environment-to-run-the-pipeline)  
-
-[Run the pipeline](#run-the-pipeline) 
-
 [Implementation notes](#implementation-notes)  
 
 [References](#references)  
