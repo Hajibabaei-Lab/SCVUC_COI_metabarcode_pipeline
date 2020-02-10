@@ -44,25 +44,15 @@ Reads are dereplicated (only unique sequences are retained) using VSEARCH v2.14.
 
 Denoised exact sequence variants (ESVs) are generated using VSEARCH with the unoise3 algorithm (Edgar, 2016).  This step removes any PhiX contamination, sequences with predicted errors, and rare sequences.  This step also produces zero-radius OTUs (Zotus) also referred to commonly as amplicon sequence variants (ASVs), ESVs, or 100% operational taxonomic unit (OTU) clusters.  Here, we define rare sequences to be sequence clusters containing only one or two reads (singletons and doubletons) and these are removed as 'noise'.  Putative chimeric sequences are then removed using the uchime3_denovo algorithm in VSEARCH.
 
-The ESVs are translated into every possible open reading frame (ORF) on the plus strand.  The longest ORFs are retained for each ESV and ESVs with outlier lengths are removed, i.e., ORFs that are too short or too long are removed.  Outliers are identified as ORFs with lengths outside the range of the 25th percentile - 1.5\*IQR and the 75th percentile + 1.5\*IQR (IQR, inter quartile range).  This method should help to screen out the most obvious pseudogenes that may have a shorter than expected length due to sequence errors, deletions, and frameshifts, or longer than expected lengths due to insertions.  There is no guarantee that genuine coding sequences are not erroneously removed during this step.  If your dataset contains taxa with coding sequences known to be unusually shorter or longer than usual, then this filtering step should be ommitted from the pipeline and the ESV table and taxonomic assignments should be based on the cat.denoised.nonchimeras file directly, edit the Snakemake file as follows:
-
-```linux
-rule create_ESV_table:
-    input:
-        db=chimera_out
-...
-rule taxonomic_assignment:
-    input:
-        chimera_out
-```
-
 An ESV x sample table that tracks read number for each ESV (longest ORF) is generated with VSEARCH.
 
 COI mtDNA taxonomic assignments are made using the Ribosomal Database classifier v2.12 (RDP classifier) available from https://sourceforge.net/projects/rdp-classifier/ (Wang et al., 2007) using the COI classifier v4 reference dataset available from https://github.com/terrimporter/CO1Classifier (Porter and Hajibabaei, 2018 Sci Rep).
 
-The final output is reformatted to add read numbers for each sample and column headers to improve readability.
+If you use the pipeline that attempts to remove arthropod pseudogenes, then arthropod ESVs are translated into every possible open reading frame (ORF) on the plus strand.  The longest ORFs are retained for each ESV and ESVs with outlier lengths are removed, i.e., ORFs that are too short or too long are removed.  Outliers are identified as ORFs with lengths outside the range of the 25th percentile - 1.5\*IQR and the 75th percentile + 1.5\*IQR (IQR, inter quartile range).  This method should help to screen out the most obvious pseudogenes that may have a shorter than expected length due to premature stop codons introduced through frameshifts caused by sequence errors, deletions, or longer than expected lengths due to insertions.  There is no guarantee that genuine coding sequences are not erroneously removed during this step.  If your dataset contains taxa with coding sequences known to be unusually shorter or longer than usual, then the alternate pipeline should be used.
 
-Statistics and log filfes are also provided for each major bioinformatic step.
+The final output is reformatted to add read numbers for each sample and column headers to improve readability.  If you ran the pipeline that attempts to remove arthropod pseudogenes, then the sequene for the longest retained open reading frame is also provided.
+
+Statistics and log files are also provided for each major bioinformatic step.
 
 ## Prepare your environment to run the pipeline
 
@@ -127,8 +117,12 @@ mkdir data
 Run Snakemake by indicating the number of jobs or cores that are available to run the whole pipeline.  
 
 ```linux
-# Choose and/or edit the appropriate configuration file (ex. config_BR5.yaml, config_F230R.yaml)
-snakemake --jobs 24 --snakefile snakefile --configfile config_BR5.yaml
+# command to run the pipeline without attempting to remove any pseudogenes
+# be sure to choose the appropriate config file for your amplicon, or edit to match your primers (eg. BR5 shown here)
+snakemake --jobs 24 --snakefile snakefile_withoutPseudogeneFiltering --config_BR5.yaml
+
+# command to run the pipeline to remove arthropod pseudogenes
+snakemake --jobs 24 --snakefile snakefile_withArthropodaPseudogeneFiltering --config_BR5.yaml
 ```
 
 You can view read number and length (min, max, mean, median, mode) statistics for each sample at steps of the bioinformatic pipeline.  
