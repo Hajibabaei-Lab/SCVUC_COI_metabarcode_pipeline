@@ -4,7 +4,7 @@ This repository contains a conda environemnt and Snakemake pipeline to processes
 
 ## Overview
 
-The pipeline begins with raw paired-end Illumina MiSeq fastq.gz files.  Reads are paired.  Primers are trimmed.  All the samples are pooled for a global analysis.  Reads are dereplicated and denoised producing a reference set of exact sequence variants (ESVs). ESVs are filtered again by retaining only the longest open reading frames (ORFs) and removing outliers (ORFs unusually sort or long).  These ORFs are taxonomically assigned using the COI mtDNA reference set available from https://github.com/terrimporter/CO1Classifier and is used with the RDP Classifier (Wang et al., 2007) available from https://sourceforge.net/projects/rdp-classifier/ .  The final output file contains taxonomic assignments and number of reads for each ESV and sample.  
+The pipeline begins with raw paired-end Illumina MiSeq fastq.gz files.  Reads are paired.  Primers are trimmed.  All the samples are pooled for a global analysis.  Reads are dereplicated and denoised producing a reference set of exact sequence variants (ESVs). The ESVs are taxonomically assigned using the COI mtDNA reference set available from https://github.com/terrimporter/CO1Classifier and is used with the RDP Classifier (Wang et al., 2007) available from https://sourceforge.net/projects/rdp-classifier/ .  At this point, the final output file is prepared OR one can proceed to filter the dataset to focus on arthropods and attempt to remove apparent pseudogenes.  The final output file contains taxonomic assignments and number of reads for each ESV and sample.  If pseudogenes were filtered, then the final output file will also contain the sequence of the longest retained open reading frame for all Arthropoda.
 
 This data flow will be updated on a regular basis so check for the latest version at https://github.com/Hajibabaei-Lab/SCVUC_COI_metabarcode_pipeline/releases .
 
@@ -21,6 +21,8 @@ If you use this dataflow or any of the provided scripts, consider citing the CO1
 [Run the pipeline](##run-the-pipeline)  
 
 [Prepare your environment to run the pipeline](##prepare-your-environment-to-run-the-pipeline)  
+
+[Run the pipeline](##run-the-pipeline) 
 
 [Implementation notes](#implementation-notes)  
 
@@ -218,4 +220,4 @@ Wang, Q., Garrity, G. M., Tiedje, J. M., & Cole, J. R. (2007). Naive Bayesian Cl
 
 I would like to acknowedge funding from the Canadian government through the Genomics Research and Development Initiative (GRDI) EcoBiomics project.
 
-Last updated: December 20, 2019
+Last updated: February 10, 2020
