@@ -148,10 +148,10 @@ sh Miniconda3-latest-Linux-x86_64.sh
 cd ~/bin
 ln -s ~/miniconda3/bin/conda conda
 
-# Activate conda (this is usually done during installation)
-source ~/miniconda3/bin/activate
+# Activate conda method 1 (working in a container)
+source ~/miniconda3/bin/activate myenv.3
 
-# Activate environment
+# Activate conda method 2
 conda activate myenv.3
 ```
 
