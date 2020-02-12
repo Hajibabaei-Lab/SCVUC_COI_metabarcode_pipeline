@@ -141,7 +141,7 @@ Install miniconda as follows:
 # Download miniconda3
 wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
 
-# Install miniconda3
+# Install miniconda3 and initialize
 sh Miniconda3-latest-Linux-x86_64.sh
 
 # Add conda to your PATH, ex. to ~/bin
@@ -150,9 +150,6 @@ ln -s ~/miniconda3/bin/conda conda
 
 # Activate conda (this is usually done during installation)
 source ~/miniconda3/bin/activate
-
-# Initialize conda (this is usually done during installation)
-conda init
 
 # Activate environment
 conda activate myenv.3
