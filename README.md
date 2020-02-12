@@ -146,7 +146,7 @@ sh Miniconda3-latest-Linux-x86_64.sh
 
 # Add conda to your PATH, ex. to ~/bin
 cd ~/bin
-ln -s miniconda3/bin/conda conda
+ln -s ~/miniconda3/bin/conda conda
 ```
 
 ### Check program versions
