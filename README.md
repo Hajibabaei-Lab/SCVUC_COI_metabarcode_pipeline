@@ -147,6 +147,15 @@ sh Miniconda3-latest-Linux-x86_64.sh
 # Add conda to your PATH, ex. to ~/bin
 cd ~/bin
 ln -s ~/miniconda3/bin/conda conda
+
+# Activate conda (this is usually done during installation)
+source ~/miniconda3/bin/activate
+
+# Initialize conda (this is usually done during installation)
+conda init
+
+# Activate environment
+conda activate myenv.3
 ```
 
 ### Check program versions
@@ -210,4 +219,4 @@ Wang, Q., Garrity, G. M., Tiedje, J. M., & Cole, J. R. (2007). Naive Bayesian Cl
 
 I would like to acknowedge funding from the Canadian government through the Genomics Research and Development Initiative (GRDI) EcoBiomics project.
 
-Last updated: February 10, 2020
+Last updated: February 12, 2020
