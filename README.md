@@ -78,7 +78,7 @@ chmod 755 ORFfinder
 mv ORFfinder ~/bin/.
 ```
 
-Run the program to test that it works.  If you get an error that requries a GLIBC_2.14 libc.so.6 library, then follow the instructions at [Use conda's libc library for NCBI's ORFfinder](#use-conda's-libc-library-for-ncbi's-orffinder).
+Run the program to test that it works.  If you get an error that requries a GLIBC_2.14 libc.so.6 library, then follow the instructions at [Use conda's libc library for NCBI's ORFfinder](#use-conda's-libc-library-for-ncbi-s-orffinder).
 
 3. The pipeline also requires the RDP classifier for the taxonomic assignment step.  Although the RDP classifier v2.2 is available through conda, a newer v2.12 is available form SourceForge at https://sourceforge.net/projects/rdp-classifier/ .  Download it and take note of where the classifier.jar file is as this needs to be added to config.yaml .
 
@@ -239,4 +239,4 @@ Wang, Q., Garrity, G. M., Tiedje, J. M., & Cole, J. R. (2007). Naive Bayesian Cl
 
 I would like to acknowedge funding from the Canadian government through the Genomics Research and Development Initiative (GRDI) EcoBiomics project.
 
-Last updated: February 12, 2020
+Last updated: February 26, 2020
