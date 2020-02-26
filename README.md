@@ -59,7 +59,10 @@ Statistics and log files are also provided for each major bioinformatic step.
 conda env create -f environment.yml
 
 # Activate the environment
-conda activate myenv
+conda activate myenv.4
+
+# On the GPSC activate using source
+source ~/miniconda/bin/activate myenv.4
 ```
 
 2. The pipeline requires ORFfinder 0.4.3 available from the NCBI at ftp://ftp.ncbi.nlm.nih.gov/genomes/TOOLS/ORFfinder/linux-i64/ .  This program should be downloaded, made executable, and put in your path.
@@ -78,7 +81,13 @@ chmod 755 ORFfinder
 mv ORFfinder ~/bin/.
 ```
 
-Run the program to test that it works.  If you get an error that requries a GLIBC_2.14 libc.so.6 library, then follow the instructions at [Use conda's libc library for NCBI's ORFfinder](#use-condas-libc-library-for-ncbis-orffinder).
+Run the program to test that it works:
+
+```linux
+ORFfinder
+```
+
+If you get an error that requries a GLIBC_2.14 libc.so.6 library, then follow the instructions at [Use conda's libc library for NCBI's ORFfinder](#use-condas-libc-library-for-ncbis-orffinder).
 
 3. The pipeline also requires the RDP classifier for the taxonomic assignment step.  Although the RDP classifier v2.2 is available through conda, a newer v2.12 is available form SourceForge at https://sourceforge.net/projects/rdp-classifier/ .  Download it and take note of where the classifier.jar file is as this needs to be added to config.yaml .
 
@@ -151,10 +160,10 @@ cd ~/bin
 ln -s ~/miniconda3/bin/conda conda
 
 # Activate conda method 1 (working in a container)
-source ~/miniconda3/bin/activate myenv.3
+source ~/miniconda3/bin/activate myenv.4
 
 # Activate conda method 2
-conda activate myenv.3
+conda activate myenv.4
 ```
 
 ### Check program versions
@@ -166,7 +175,7 @@ Ensure the program versions in the environment are being used.
 conda env create -f environment.yml
 
 # activate the environment
-conda activate myenv.3
+conda activate myenv.4
 
 # list all programs available in the environment at once
 conda list > programs.list
@@ -188,7 +197,7 @@ Version numbers are also tracked in the snakefile.
 
 The glibc 2.14 library is already available in the myenv.4 environment.  The LD_LIBRARY_PATH environment variable will need to be activated (and deactivated) by adding the following scripts as follows:
 
-Create the shell script file LD_PATH.sh in the following location: ~/miniconda3/envs/myenv.4/etc/conda/activate.d/LD_PATH.sh
+Create the shell script file LD_PATH.sh in the following location to set the environment variable: ~/miniconda3/envs/myenv.4/etc/conda/activate.d/LD_PATH.sh
 
 Put the following text in the LD_PATH.sh file:
 
@@ -197,13 +206,15 @@ export LD_LIBRARY_PATH_CONDA_BACKUP=$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib64:$LD_LIBRARY_PATH
 ```
 
-Create the file LD_PATH.sh in the following location: ~/miniconda3/envs/myenv.4/etc/conda/deactivate.d/LD_PATH.sh
+Create the file LD_PATH.sh in the following location to unset the environment variable: ~/miniconda3/envs/myenv.4/etc/conda/deactivate.d/LD_PATH.sh
 
 Put the following text in the LC_PATH.sh file:
 
 ```linux
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH_CONDA_BACKUP
 ```
+
+Deactivate then reactivate the environment.
 
 ### Batch renaming of files
 
