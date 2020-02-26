@@ -78,6 +78,8 @@ chmod 755 ORFfinder
 mv ORFfinder ~/bin/.
 ```
 
+Run the program to test that it works.  If you get an error that requries a GLIBC_2.14 libc.so.6 library, then follow the instructions at [Use conda's libc library for NCBI's ORFfinder](#use-conda's-libc-library-for-ncbi's-orffinder).
+
 3. The pipeline also requires the RDP classifier for the taxonomic assignment step.  Although the RDP classifier v2.2 is available through conda, a newer v2.12 is available form SourceForge at https://sourceforge.net/projects/rdp-classifier/ .  Download it and take note of where the classifier.jar file is as this needs to be added to config.yaml .
 
 The RDP classifier comes with the training sets to classify 16S, fungal ITS, and fungal LSU rDNA sequences.  To classify COI mtDNA sequences, obtain the COI classifier v4 reference set from GitHub 
@@ -181,6 +183,27 @@ vsearch --version
 ```
 
 Version numbers are also tracked in the snakefile.
+
+### Use conda's libc library for NCBI's ORFfinder
+
+The glibc 2.14 library is already available in the myenv.4 environment.  The LD_LIBRARY_PATH environment variable will need to be activated (and deactivated) by adding the following scripts as follows:
+
+Create the shell script file LD_PATH.sh in the following location: ~/miniconda3/envs/myenv.4/etc/conda/activate.d/LD_PATH.sh
+
+Put the following text in the LD_PATH.sh file:
+
+```linux
+export LD_LIBRARY_PATH_CONDA_BACKUP=$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib64:$LD_LIBRARY_PATH
+```
+
+Create the file LD_PATH.sh in the following location: ~/miniconda3/envs/myenv.4/etc/conda/deactivate.d/LD_PATH.sh
+
+Put the following text in the LC_PATH.sh file:
+
+```linux
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH_CONDA_BACKUP
+```
 
 ### Batch renaming of files
 
