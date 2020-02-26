@@ -44,7 +44,7 @@ An ESV x sample table that tracks read number for each ESV (longest ORF) is gene
 
 COI mtDNA taxonomic assignments are made using the Ribosomal Database classifier v2.12 (RDP classifier) available from https://sourceforge.net/projects/rdp-classifier/ (Wang et al., 2007) using the COI classifier v4 reference dataset available from https://github.com/terrimporter/CO1Classifier (Porter and Hajibabaei, 2018 Sci Rep).
 
-If you use the pipeline that attempts to remove arthropod pseudogenes, then arthropod ESVs are translated into every possible open reading frame (ORF) on the plus strand.  The longest ORFs are retained for each ESV and ESVs with outlier lengths are removed, i.e., ORFs that are too short or too long are removed.  Outliers are identified as ORFs with lengths outside the range of the 25th percentile - 1.5\*IQR and the 75th percentile + 1.5\*IQR (IQR, inter quartile range).  This method should help to screen out the most obvious pseudogenes that may have a shorter than expected length due to premature stop codons introduced through frameshifts caused by sequence errors, deletions, or longer than expected lengths due to insertions.  There is no guarantee that genuine coding sequences are not erroneously removed during this step.  If your dataset contains taxa with coding sequences known to be unusually shorter or longer than usual, then the alternate pipeline should be used.
+If you use the pipeline that attempts to remove arthropod pseudogenes, then arthropod ESVs are translated into every possible open reading frame (ORF) on the plus strand.  The longest ORFs are retained for each ESV and ESVs with outlier lengths are removed, i.e., ORFs that are too short or too long are removed.  Outliers are identified as ORFs with lengths outside the range of the 25th percentile - 1.5\*IQR and the 75th percentile + 1.5\*IQR (IQR, inter quartile range).  This method should help to screen out the most obvious pseudogenes that may have a shorter than expected length due to premature stop codons introduced through frameshifts caused by sequence errors, indels, or longer than expected lengths due to insertions.  There is no guarantee that genuine coding sequences are not erroneously removed during this step.  If your dataset contains taxa with coding sequences known to be unusually shorter or longer than usual, then the alternate pipeline should be used.
 
 The final output is reformatted to add read numbers for each sample and column headers to improve readability.  If you ran the pipeline that attempts to remove arthropod pseudogenes, then the sequene for the longest retained open reading frame is also provided.
 
@@ -59,7 +59,10 @@ Statistics and log files are also provided for each major bioinformatic step.
 conda env create -f environment.yml
 
 # Activate the environment
-conda activate myenv
+conda activate myenv.4
+
+# On the GPSC activate using source
+source ~/miniconda/bin/activate myenv.4
 ```
 
 2. The pipeline requires ORFfinder 0.4.3 available from the NCBI at ftp://ftp.ncbi.nlm.nih.gov/genomes/TOOLS/ORFfinder/linux-i64/ .  This program should be downloaded, made executable, and put in your path.
@@ -77,6 +80,14 @@ chmod 755 ORFfinder
 # put in your PATH (ex. ~/bin)
 mv ORFfinder ~/bin/.
 ```
+
+Run the program to test that it works:
+
+```linux
+ORFfinder
+```
+
+If you get an error that requries a GLIBC_2.14 libc.so.6 library, then follow the instructions at [Use conda's libc library for NCBI's ORFfinder](#use-condas-libc-library-for-ncbis-orffinder).
 
 3. The pipeline also requires the RDP classifier for the taxonomic assignment step.  Although the RDP classifier v2.2 is available through conda, a newer v2.12 is available form SourceForge at https://sourceforge.net/projects/rdp-classifier/ .  Download it and take note of where the classifier.jar file is as this needs to be added to config.yaml .
 
@@ -141,12 +152,18 @@ Install miniconda as follows:
 # Download miniconda3
 wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
 
-# Install miniconda3
+# Install miniconda3 and initialize
 sh Miniconda3-latest-Linux-x86_64.sh
 
 # Add conda to your PATH, ex. to ~/bin
 cd ~/bin
-ln -s miniconda3/bin/conda conda
+ln -s ~/miniconda3/bin/conda conda
+
+# Activate conda method 1 (working in a container)
+source ~/miniconda3/bin/activate myenv.4
+
+# Activate conda method 2
+conda activate myenv.4
 ```
 
 ### Check program versions
@@ -158,7 +175,7 @@ Ensure the program versions in the environment are being used.
 conda env create -f environment.yml
 
 # activate the environment
-conda activate myenv.3
+conda activate myenv.4
 
 # list all programs available in the environment at once
 conda list > programs.list
@@ -175,6 +192,29 @@ vsearch --version
 ```
 
 Version numbers are also tracked in the snakefile.
+
+### Use conda's libc library for NCBI's ORFfinder
+
+The glibc 2.14 library is already available in the myenv.4 environment.  The LD_LIBRARY_PATH environment variable will need to be activated (and deactivated) by adding the following scripts as follows:
+
+Create the shell script file LD_PATH.sh in the following location to set the environment variable: ~/miniconda3/envs/myenv.4/etc/conda/activate.d/LD_PATH.sh
+
+Put the following text in the LD_PATH.sh file:
+
+```linux
+export LD_LIBRARY_PATH_CONDA_BACKUP=$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib64:$LD_LIBRARY_PATH
+```
+
+Create the file LD_PATH.sh in the following location to unset the environment variable: ~/miniconda3/envs/myenv.4/etc/conda/deactivate.d/LD_PATH.sh
+
+Put the following text in the LC_PATH.sh file:
+
+```linux
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH_CONDA_BACKUP
+```
+
+Deactivate then reactivate the environment.
 
 ### Batch renaming of files
 
@@ -210,4 +250,4 @@ Wang, Q., Garrity, G. M., Tiedje, J. M., & Cole, J. R. (2007). Naive Bayesian Cl
 
 I would like to acknowedge funding from the Canadian government through the Genomics Research and Development Initiative (GRDI) EcoBiomics project.
 
-Last updated: February 10, 2020
+Last updated: February 26, 2020
