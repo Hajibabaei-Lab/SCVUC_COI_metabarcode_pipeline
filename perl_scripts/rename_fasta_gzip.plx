@@ -1,4 +1,4 @@
-#!/path/to/miniconda3/envs/myenv/bin/perl
+#!/path/to/miniconda3/envs/SCVUCv4.3/bin/perl
 # By: Teresita M. Porter
 # Date: August 20, 2019
 # Script to add sample name from filenames to the fasta header

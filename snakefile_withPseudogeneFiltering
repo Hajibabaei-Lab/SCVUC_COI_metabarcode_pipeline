@@ -81,17 +81,22 @@ table_log=dir+"/table.log"
 
 # 8_Taxonomic assignment
 rdp_out=dir+"/rdp.out.tmp"
-arth_out=dir+"/arthropoda.zotus"
-arth_out2=dir+"/chimera.denoised.nonchimeras.arthropoda"
+taxon_out=dir+"/taxon.zotus"
+taxon_out2=dir+"/chimera.denoised.nonchimeras.taxon"
 
-# 9_Get CDS
-orf_out=dir+"/orfs.fasta"
-longest_orf_out=dir+"/longest.orfs.fasta"
+# 9_Pseudogene filtering
+taxon=config["taxon"]
+orf_out_nt=dir+"/orfs.fasta.nt"
+orf_out_aa=dir+"/orfs.fasta.aa"
+consolidated_orfs_nt=dir+"/orfs.fasta.nt.filtered"
+consolidated_orfs_aa=dir+"/orfs.fasta.aa.filtered"
+hmm=config["hmm"]
+hmm_out=dir+"/hmm.txt"
+rdp_csv=dir+"/rdp.csv.tmp"
 
 # 10_Map longest ORFs
-rdp_csv=dir+"/rdp.csv.tmp" #add read numbers
-rdp_csv2=dir+"/rdp.csv.tmp2" # add longest ORF seqs
-rdp_csv3=dir+"/arthropoda_results.csv" #add amplicon name
+rdp_csv2=dir+"/rdp.csv.tmp2" #add read numbers
+rdp_csv3=dir+"/results.csv" #add amplicon name
 
 #######################################################################
 # This rule defines the final target file that is needed from the pipeline
@@ -140,19 +145,23 @@ rule all:
 #		table_out
 		# 8_Taxonomic assignment
 #		rdp_out,
-		# 8_Taxonomic assignment (get list of arthropod zotus)
-#		arth_out,
-		# 8_Taxonomic assignment (filter chimera_out to get arthropod seqs only)
-		arth_out2,
-		# 9_Get CDS, translate ESVs into every possible ORF (plus strand)
-#		orf_out
-		# 9_Get longest ORFs, outliers removed
-#		longest_orf_out
+		# 8_Taxonomic assignment (get list of taxon zotus)
+#		taxon_out,
+		# 8_Taxonomic assignment (get taxon zotu seqs only)
+#		taxon_out2,
+		# 9_Translate ESVs into every possible ORF
+#		orf_out_nt,
+#		orf_out_aa,
+		# 9_Consolidate nt and aa orfs
+#		consolidated_orfs_nt,
+#		consolidated_orfs_aa,
+		# 9_Profile HMM analysis
+#		hmm_out,
+		# 9_Subset rdp by hmmer score
+#		rdp_csv,
 		# 10_Map longest ORFs (add read numbers)
-#		rdp_csv
+#		rdp_csv2,
 		# 10_Map longest ORFs (add amplicon name)
-#		rdp_csv2
-		# 10_Map longest ORFs (add longest ORF seqs)
 		rdp_csv3
 	 
 #######################################################################
@@ -436,50 +445,90 @@ rule taxonomic_assignment:
 		"java -Xmx8g -jar {config[RDP][jar]} classify -t {config[RDP][t]} -o {output} {input}"
 	
 #######################################################################
-# Get list of Arthropod zotus
+# Narrow zotus by taxonomic group
 
-rule get_arthropod_list:
+rule get_taxon_list:
 	input:
 		rdp_out
 	output:
-		arth_out
+		taxon_out
 	shell:
-		"""grep Arthropoda {input} | awk "{{print \$1}}" > {output}"""
+		"""grep {config[taxon]} {input} | awk "{{print \$1}}" > {output}"""
 
 #######################################################################
-# Create FASTA file of arthropod seqs only
+# Create FASTA file of taxon seqs only
 
-rule get_arthropod_nonchimeras:
+rule get_taxon_nonchimeras:
 	input:
-		arth=arth_out,
+		tax=taxon_out,
 		fas=chimera_out
 	output:
-		arth_out2
+		taxon_out2
 	shell:
-		"perl perl_scripts/get_arthropoda_only.plx {input.arth} {input.fas} > {output}"
+		"perl perl_scripts/get_taxon_only.plx {input.tax} {input.fas} > {output}"
 
 #######################################################################
-# Get CDS, first translate ESVs into every possible ORF
+# Translate ESVs into every possible ORF, save nucleotide sequence:1
 
-rule get_orfs:
+
+rule get_orfs_nt:
 	version: "0.4.3"
 	input:
-		arth_out2
+		taxon_out2
 	output:
-		orf_out
+		orf_out_nt
 	shell:
-		"ORFfinder -in {input} -g {config[ORFFINDER][g]} -s {config[ORFFINDER][s]} -ml {config[ORFFINDER][ml]} -n {config[ORFFINDER][n]} -strand {config[ORFFINDER][strand]} -out {output} -outfmt {config[ORFFINDER][outfmt]}"
+		"ORFfinder -in {input} -g {config[ORFFINDER][g]} -s {config[ORFFINDER][s]} -ml {config[ORFFINDER][ml]} -n {config[ORFFINDER][n]} -strand {config[ORFFINDER][strand]} -out {output} -outfmt 1"
 
 #######################################################################
-# Get longest nt ORFs, outliers removed
+# Translate ESVs into every possible ORF, save amino acid sequence
+
+rule get_orfs_aa:
+	version: "0.4.3"
+	input:
+		taxon_out2
+	output:
+		orf_out_aa
+	shell:
+		"ORFfinder -in {input} -g {config[ORFFINDER][g]} -s {config[ORFFINDER][s]} -ml {config[ORFFINDER][ml]} -n {config[ORFFINDER][n]} -strand {config[ORFFINDER][strand]} -out {output} -outfmt 0"
+
+#######################################################################
+# Consolidate nt and aa ORFs
 
 rule filter_cds2:
 	input:
-		orf_out
+		nt=orf_out_nt,
+		aa=orf_out_aa
 	output:
-		longest_orf_out
+		nt=consolidated_orfs_nt,
+		aa=consolidated_orfs_aa
 	shell:
-		"perl perl_scripts/parse_orfs3.plx {input} {output}"
+		"perl perl_scripts/parse_orfs4.plx {input.nt} {input.aa} {output.nt} {output.aa}"
+
+#######################################################################
+# Profile HMM analysis
+
+rule hmmscan:
+	input:
+		orf=consolidated_orfs_aa,
+		hmm=hmm
+	output:
+		hmm_out
+	shell:
+		"hmmscan --tblout {output} {input.hmm} {input.orf}"
+
+#######################################################################
+# Perl script to parse hmmer output, grab query IDs & score, calc outlier cutoff, use these IDs to subset
+
+rule filter_rdp:
+	input:
+		hmmer=hmm_out,
+		rdp=rdp_out,
+		orfs=consolidated_orfs_nt
+	output:
+		rdp_csv
+	shell:
+		"perl perl_scripts/filter_rdp.plx {input.hmmer} {input.orfs} {input.rdp} >> {output}"
 
 #######################################################################
 # Map read number
@@ -489,24 +538,11 @@ rule filter_cds2:
 rule map_read_number:
 	input:
 		table=table_out,
-		rdp=rdp_out
-	output:
-		rdp_csv
-	shell:
-		"perl perl_scripts/add_abundance_to_rdp_out4.plx {input.table} {input.rdp} > {output}"
-
-#######################################################################
-# Map longest ORFs
-
-rule map_longest_orfs:
-	input:
-		orf=longest_orf_out,
 		rdp=rdp_csv
 	output:
 		rdp_csv2
 	shell:
-		"perl perl_scripts/add_longest_orfs_to_csv.plx {input.orf} {input.rdp} > {output}"
-
+		"perl perl_scripts/add_abundance_to_rdp_out5.plx {input.table} {input.rdp} > {output}"
 
 #######################################################################
 # Edit csv to add amplicon name to Zotu

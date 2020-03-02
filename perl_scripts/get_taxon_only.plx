@@ -1,7 +1,7 @@
-#!/path/to/miniconda3/envs/myenv.3/bin/perl
-# Feb. 10, 2020 by Teresita M. Porter
-# Script to filter cat.denoised.nonchimeras to arthropoda only
-# USAGE perl get_arthropoda_only.plx arthropoda.zotus cat.denoised.nonchimeras > cat.denoised.nonchimeras.arthropoda
+#!/path/to/miniconda3/envs/SCVUCv4.3/bin/perl
+# March 2, 2020 by Teresita M. Porter
+# Script to filter cat.denoised.nonchimeras to previously chosen taxon only (see config file)
+# USAGE perl get_taxon_only.plx taxon.zotus cat.denoised.nonchimeras > cat.denoised.nonchimeras.taxon
 
 use strict;
 use warnings;
@@ -16,15 +16,15 @@ my $seq;
 my $flag=0;
 
 # arrays
-my @arth;
+my @tax;
 my @fas;
 
 # hashes
 my %fasta; #key = zotu, val = seq
 
-open (ARTH, "<", $ARGV[0]) || die "Cannot open list of arthropod zotus: $!\n";
-@arth = <ARTH>;
-close ARTH;
+open (TAXON, "<", $ARGV[0]) || die "Cannot open list of arthropod zotus: $!\n";
+@tax = <TAXON>;
+close TAXON;
 
 open (FAS, "<", $ARGV[1]) || die "Cannot open cat.denoised.nonchimeras FASTA file: $!\n";
 @fas = <FAS>;
@@ -62,10 +62,8 @@ $i=0;
 # add final record
 $fasta{$zotu} = $oldseq;
 
-#print Dumper(\%fasta); # testing
-
-while ($arth[$i]) {
-	$zotu = $arth[$i];
+while ($tax[$i]) {
+	$zotu = $tax[$i];
 	chomp $zotu;
 
 	if (exists $fasta{$zotu}) {

@@ -1,4 +1,4 @@
-#!/path/to/miniconda3/envs/myenv/bin/perl
+#!/path/to/miniconda3/envs/SCVUCv4.3/bin/perl
 # Aug. 13/19 edit to work with snakemake
 # Teresita M. Porter
 # Script to grab seq stats from fastq.gz files

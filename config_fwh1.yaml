@@ -1,14 +1,14 @@
 # Configuration file for SCVUCv4
 
 # Author: Teresita M. Porter
-# Date: Feb. 8, 2020
+# Date: March 2, 2020
 
 ############################################################################
 # General pipeline settings
 ############################################################################
 
 # Indicate number of cores available to run pipeline, snakefile, and configuration file at the command line:
-# snakemake --jobs 24 --snakefile snakefile --configfile config.yaml
+# snakemake --cores 24 --snakefile snakefile --configfile config.yaml
 
 ############################################################################
 # Identify raw read files
@@ -16,18 +16,17 @@
 
 # This directory contains raw reads (all of them or from just one run)
 # Only use compressed fastq files with this pipeline, ex. fastq.gz
-# For the standard pipeline, call the directory "data"
 raw: "data"
 
 # Indicate 'sample' and 'read' wildcards in raw filenames:
-# These files should be in a "data" or "run1", etc. folder
+# These files should be in a "data" folder
 # Sample filename structure,
 # 	SITE-CONDITION-REPLICATE_S1_L001_R1_001.fastq.gz
 # 	{sample}_L001_R{read}_001.fastq.gz
 raw_sample_read_wildcards: "data/{sample}_L001_R{read}_001.fastq.gz"
 
 # SEQPREP sample wildcard and parameters
-# These files should be in a "data" or "run1", etc. folder
+# These files should be in a "data" folder
 # Sample,
 #	{sample}_L001_R1_001.fastq.gz
 raw_sample_forward_wildcard: "data/{sample}_L001_R1_001.fastq.gz"
@@ -62,13 +61,12 @@ CUTADAPT_REV:
     q: "20,20"
     mn: 3
 
-
 ############################################################################
 # Dereplication
 ############################################################################
 
 # Indicate a directory name here that is short and simple with no spaces or weird punctuation
-# For the standard pipeline, a good directory name would be the amplicon, ex. "BR5"
+# A good directory name would be the amplicon, ex. "BR5"
 
 dir: "fwh1"
 
@@ -83,8 +81,37 @@ VSEARCH_DENOISE:
     minsize: 3
 
 ############################################################################
-# Get CDS
+# ESV x sample table
 ############################################################################
+
+# VSEARCH params
+VSEARCH_TABLE:
+# Indicate number of cores to use
+# Do not exceed the number of cores allotted to run the whole pipeline ('--cores' above)
+    t: 24
+
+
+############################################################################
+# Taxonomic assignment
+############################################################################
+
+# Uses the RDP classifier
+# Do not use old RDP classifier v2.2 from conda, install the newer v2.12 from SourceForge https://sourceforge.net/projects/rdp-classifier/
+# COI Classifier v4 based on sequences mined from GenBank and BOLD but compatible with the RDP classifier is available from GitHub https://github.com/Hajibabaei-Lab/SCVUC_COI_metabarcode_pipeline
+
+RDP:
+    jar: "/home/terri/rdp_classifier_2.12/dist/classifier.jar"
+    t: "/home/terri/CO1Classifier/v4/NCBI_BOLD_merged/mydata/mydata_trained/rRNAClassifier.properties"
+
+############################################################################
+# Filter out pseudogenes
+############################################################################
+
+# Target a single taxonomic group, ex. Arthropoda
+taxon: 'Arthropoda'
+
+# Indicate path to hmm profile
+hmm: 'bold.hmm'
 
 # Translate ESVs into all open reading frames
 # ORFfinder params
@@ -108,36 +135,6 @@ ORFFINDER:
 
 # strand (both|plus|minus)
     strand: 'plus'
-
-# outfiile format
-# 0 = list of ORFs in FASTA format (aa)
-# 1 = CDS fasta (nt)
-# 2 = Text ASN.1
-# 3 = Feature table
-    outfmt: 1
-
-############################################################################
-# ESV x sample table
-############################################################################
-
-# VSEARCH params
-VSEARCH_TABLE:
-# Indicate number of threads to use
-# Do not exceed the number of jobs allotted to run the whole pipeline ('jobs' above)
-    t: 24
-
-
-############################################################################
-# Taxonomic assignment
-############################################################################
-
-# Uses the RDP classifier
-# Do not use old RDP classifier v2.2 from conda, install the newer v2.12 from SourceForge https://sourceforge.net/projects/rdp-classifier/
-# COI Classifier v4 based on sequences mined from GenBank and BOLD but compatible with the RDP classifier is available from GitHub https://github.com/Hajibabaei-Lab/SCVUC_COI_metabarcode_pipeline
-
-RDP:
-    jar: "/path/to/rdp_classifier_2.12/dist/classifier.jar"
-    t: "/path/to/CO1Classifier/v4/NCBI_BOLD_merged/mydata/mydata_trained/rRNAClassifier.properties"
 
 ############################################################################
 # Reformat CSV

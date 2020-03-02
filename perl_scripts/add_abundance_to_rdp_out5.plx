@@ -1,6 +1,7 @@
 #!/path/to/miniconda3/envs/SCVUCv4.3/bin/perl
-# Teresita M. Porter, August, 21, 2019
+# Teresita M. Porter, March 2, 2020
 # Script to add read abundance from ESV.table to rdp.out
+# Create new column name for ORF seq (nt)
 # Prints to STDOUT so redirect to a file in snakemake
 # USAGE perl add_abundance_to_rdp_out4.plx ESV.table rdp.out > outfile
 
@@ -94,8 +95,7 @@ while ($table[$i]) {
 $i=0;
 
 #loop through hash of hashes, if OTU abund >= 3 keep and append taxonomic assignment, print out new assignment report
-#open (OUT, ">>", $outfile) || die "Error cannot open outfile : $!\n";
-print STDOUT "GlobalESV,SampleName,ESVsize,Strand,Root,RootRank,rBP,SuperKingdom,SuperKingdomRank,skBP,Kingdom,KingdomRank,kBP,Phylum,PhylumRank,pBP,Class,ClassRank,cBP,Order,OrderRank,oBP,Family,FamilyRank,fBP,Genus,GenusRank,gBP,Species,SpeciesRank,sBP\n";
+print STDOUT "GlobalESV,SampleName,ESVsize,ORF,Strand,Root,RootRank,rBP,SuperKingdom,SuperKingdomRank,skBP,Kingdom,KingdomRank,kBP,Phylum,PhylumRank,pBP,Class,ClassRank,cBP,Order,OrderRank,oBP,Family,FamilyRank,fBP,Genus,GenusRank,gBP,Species,SpeciesRank,sBP\n";
 
 #add read abundance to rdp out as a new column, unmap here!
 while (($global_otu, $assignment) = each %assignment) {
@@ -126,4 +126,3 @@ while (($global_otu, $assignment) = each %assignment) {
         }
 }
 
-#close OUT;
