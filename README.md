@@ -59,10 +59,10 @@ Statistics and log files are also provided for each major bioinformatic step.
 conda env create -f environment.yml
 
 # Activate the environment
-conda activate SCVUCv4
+conda activate SCVUCv4.3
 
 # On the GPSC activate using source
-source ~/miniconda/bin/activate SCVUCv4
+source ~/miniconda/bin/activate SCVUCv4.3
 ```
 
 2. The pipeline requires ORFfinder 0.4.3 available from the NCBI at ftp://ftp.ncbi.nlm.nih.gov/genomes/TOOLS/ORFfinder/linux-i64/ .  This program should be downloaded, made executable, and put in your path.
@@ -116,7 +116,7 @@ mkdir data
 #!/usr/bin/perl
 
 # Alternate shebang if you want to run perl using the conda environment (edit this)
-#!/path/to/miniconda3/envs/SCVUCv4/bin/perl
+#!/path/to/miniconda3/envs/SCVUCv4.3/bin/perl
 ```
 
 ## Run the pipeline
@@ -160,10 +160,10 @@ cd ~/bin
 ln -s ~/miniconda3/bin/conda conda
 
 # Activate conda method 1 (working in a container)
-source ~/miniconda3/bin/activate SCVUCv4
+source ~/miniconda3/bin/activate SCVUCv4.3
 
 # Activate conda method 2
-conda activate SCVUCv4
+conda activate SCVUCv4.3
 ```
 
 ### Check program versions
@@ -175,7 +175,7 @@ Ensure the program versions in the environment are being used.
 conda env create -f environment.yml
 
 # activate the environment
-conda activate SCVUCv4
+conda activate SCVUCv4.3
 
 # list all programs available in the environment at once
 conda list > programs.list
@@ -195,9 +195,9 @@ Version numbers are also tracked in the snakefile.
 
 ### Use conda's libc library for NCBI's ORFfinder
 
-The glibc 2.14 library is already available in the SCVUCv4 environment.  The LD_LIBRARY_PATH environment variable will need to be activated (and deactivated) by adding the following scripts as follows:
+The glibc 2.14 library is already available in the SCVUCv4.3 environment.  The LD_LIBRARY_PATH environment variable will need to be activated (and deactivated) by adding the following scripts as follows:
 
-Create the shell script file LD_PATH.sh in the following location to set the environment variable: ~/miniconda3/envs/SCVUCv4/etc/conda/activate.d/LD_PATH.sh
+Create the shell script file LD_PATH.sh in the following location to set the environment variable: ~/miniconda3/envs/SCVUCv4.3/etc/conda/activate.d/LD_PATH.sh
 
 Put the following text in the LD_PATH.sh file:
 
@@ -206,7 +206,7 @@ export LD_LIBRARY_PATH_CONDA_BACKUP=$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib64:$LD_LIBRARY_PATH
 ```
 
-Create the file LD_PATH.sh in the following location to unset the environment variable: ~/miniconda3/envs/SCVUCv4/etc/conda/deactivate.d/LD_PATH.sh
+Create the file LD_PATH.sh in the following location to unset the environment variable: ~/miniconda3/envs/SCVUCv4.3/etc/conda/deactivate.d/LD_PATH.sh
 
 Put the following text in the LC_PATH.sh file:
 
@@ -250,4 +250,4 @@ Wang, Q., Garrity, G. M., Tiedje, J. M., & Cole, J. R. (2007). Naive Bayesian Cl
 
 I would like to acknowedge funding from the Canadian government through the Genomics Research and Development Initiative (GRDI) EcoBiomics project.
 
-Last updated: February 26, 2020
+Last updated: March 2, 2020
