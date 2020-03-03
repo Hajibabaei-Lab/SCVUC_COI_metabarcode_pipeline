@@ -208,7 +208,7 @@ export LD_LIBRARY_PATH=$CONDA_PREFIX/lib64:$LD_LIBRARY_PATH
 
 Create the file LD_PATH.sh in the following location to unset the environment variable: ~/miniconda3/envs/SCVUCv4.3/etc/conda/deactivate.d/LD_PATH.sh
 
-Put the following text in the LC_PATH.sh file:
+Put the following text in the LD_PATH.sh file:
 
 ```linux
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH_CONDA_BACKUP
