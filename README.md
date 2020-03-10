@@ -214,6 +214,13 @@ Put the following text in the LD_PATH.sh file:
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH_CONDA_BACKUP
 ```
 
+Create a symbolic link to the library:
+
+```linux
+cd ~/miniconda3/envs/SCVUCv4.3/lib64
+ln -s ../glibc-2.14/lib/libc.so.6 libc.so.6
+```
+
 Deactivate then reactivate the environment.
 
 ### Batch renaming of files
