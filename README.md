@@ -126,10 +126,10 @@ Run Snakemake by indicating the number of jobs or cores that are available to ru
 ```linux
 # command to run the pipeline without attempting to remove any pseudogenes
 # be sure to choose the appropriate config file for your amplicon, or edit to match your primers (eg. BR5 shown here)
-snakemake --jobs 24 --snakefile snakefile_withoutPseudogeneFiltering --config_BR5.yaml
+snakemake --jobs 24 --snakefile snakefile_withoutPseudogeneFiltering --configfile config_BR5.yaml
 
 # command to run the pipeline to remove arthropod pseudogenes
-snakemake --jobs 24 --snakefile snakefile_withPseudogeneFiltering --config_BR5.yaml
+snakemake --jobs 24 --snakefile snakefile_withPseudogeneFiltering --configfile config_BR5.yaml
 ```
 
 You can view read number and length (min, max, mean, median, mode) statistics for each sample at steps of the bioinformatic pipeline.  
