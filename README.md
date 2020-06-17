@@ -129,7 +129,7 @@ Run Snakemake by indicating the number of jobs or cores that are available to ru
 snakemake --jobs 24 --snakefile snakefile_withoutPseudogeneFiltering --config_BR5.yaml
 
 # command to run the pipeline to remove arthropod pseudogenes
-snakemake --jobs 24 --snakefile snakefile_withArthropodaPseudogeneFiltering --config_BR5.yaml
+snakemake --jobs 24 --snakefile snakefile_withPseudogeneFiltering --config_BR5.yaml
 ```
 
 You can view read number and length (min, max, mean, median, mode) statistics for each sample at steps of the bioinformatic pipeline.  
@@ -257,4 +257,4 @@ Wang, Q., Garrity, G. M., Tiedje, J. M., & Cole, J. R. (2007). Naive Bayesian Cl
 
 I would like to acknowedge funding from the Canadian government through the Genomics Research and Development Initiative (GRDI) EcoBiomics project.
 
-Last updated: March 2, 2020
+Last updated: June 17, 2020
