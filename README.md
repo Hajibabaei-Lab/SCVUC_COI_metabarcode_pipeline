@@ -38,15 +38,15 @@ Files are reformatted and samples are combined for a global analysis.
 
 Reads are dereplicated (only unique sequences are retained) using VSEARCH v2.14.1 from bioconda (Rognes et al., 2016).
 
-Denoised exact sequence variants (ESVs) are generated using VSEARCH with the unoise3 algorithm (Edgar, 2016).  This step removes any PhiX contamination, sequences with predicted errors, and rare sequences.  This step also produces zero-radius OTUs (Zotus) also referred to commonly as amplicon sequence variants (ASVs), ESVs, or 100% operational taxonomic unit (OTU) clusters.  Here, we define rare sequences to be sequence clusters containing only one or two reads (singletons and doubletons) and these are removed as 'noise'.  Putative chimeric sequences are then removed using the uchime3_denovo algorithm in VSEARCH.
+Denoised exact sequence variants (ESVs) are generated using VSEARCH with the unoise3 algorithm (Edgar, 2016).  This step corrects sequences with predicted errors and removes rare sequences.  This step also produces zero-radius OTUs (Zotus) also referred to commonly as amplicon sequence variants (ASVs), ESVs, or 100% operational taxonomic unit (OTU) clusters.  Here, we define rare sequences to be sequence clusters containing only one or two reads (singletons and doubletons) and these are also removed as 'noise'.  Putative chimeric sequences are then removed using the uchime3_denovo algorithm in VSEARCH.
 
-An ESV x sample table that tracks read number for each ESV (longest ORF) is generated with VSEARCH.
+An ESV x sample table that tracks read number for each ESV (longest ORF) is generated with VSEARCH using --search_exact .  Note that this in this pipeline this is just an intermediate file and that the final retained set of ESVs and mapped read numbers should be retrieved from the final output file (results.csv or rdp.csv).
 
 COI mtDNA taxonomic assignments are made using the Ribosomal Database classifier v2.12 (RDP classifier) available from https://sourceforge.net/projects/rdp-classifier/ (Wang et al., 2007) using the COI classifier v4 reference dataset available from https://github.com/terrimporter/CO1Classifier (Porter and Hajibabaei, 2018 Sci Rep).
 
 If you use the pipeline that attempts to remove arthropod pseudogenes, then arthropod ESVs are translated into every possible open reading frame (ORF) on the plus strand using ORFfinder v0.4.3.  Amino acid sequences for the longest ORFs are used for profile hidden Markov model sequence analysis using HMMER v3.3 available from http://hmmer.org .  Sequence bit score outliers are identified as follows: ORFs with scores lower than the 25th percentile - 1.5\*IQR (inter quartile range) are removed as putative pseudogenes.  This method should remove sequences that don't match well to a profile HMM based on arthropod COI barcode sequences.  There is no guarantee that genuine coding sequences are not erroneously removed during this step.
 
-The final output is reformatted to add read numbers for each sample and column headers to improve readability.  If you ran the pipeline that attempts to remove arthropod pseudogenes, then the sequene for the longest retained open reading frame is also provided.
+The final output is reformatted to add read numbers for each sample and column headers to improve readability.  If you ran the pipeline that attempts to remove arthropod pseudogenes, then the sequene for the longest retained open reading frame is also provided in results.csv .  If you ran the pipeline without pseudogene removal then the final outfile is rdp.csv .
 
 Statistics and log files are also provided for each major bioinformatic step.
 
@@ -222,6 +222,10 @@ ln -s ../glibc-2.14/lib/libc.so.6 libc.so.6
 ```
 
 Deactivate then reactivate the environment.
+
+### Use the bold.hmm with the pseudogene removal pipeline
+
+Ensure that bold.hmm as well as the indexed files (bold.hmm.h3p, bold.hmm.h3m, bold.hmm.h3i, and bold.hmm.h3f) are available in the same directory as you snakefile.
 
 ### Batch renaming of files
 
